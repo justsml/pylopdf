@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 import pylopdf
 from bench.structure_core import geometry_tables, markdown_tables, render_tables, validate_patch
-from bench.structure_native import header_guided_records
+from bench.structure_native import header_guided_records, header_word_ids
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -58,6 +58,7 @@ def recover(bundle: dict[str, Any], directory: Path, ocr: pylopdf.OcrEngine, *, 
     spans: list[list[list[int]]] = []
     covered: set[str] = set()
     choices = []
+    retained_headers: set[str] = set()
     with pylopdf.open(directory / "input.pdf") as document:
         page = document[0]
         if not words:
@@ -81,6 +82,7 @@ def recover(bundle: dict[str, Any], directory: Path, ocr: pylopdf.OcrEngine, *, 
                 matrix = markdown_tables(table.to_markdown())[0]
                 unresolved = max(map(len, matrix[0])) > _MAX_HEADER_CHARS
                 if unresolved:
+                    retained_headers.update(header_word_ids(table, words))
                     matrix = [[value or "" for value in row] for row in table.extract() if any(row)]
                     matrix[0] = [f"Column {column + 1}" for column in range(table.col_count)]
                 matrices.append(matrix)
@@ -101,6 +103,7 @@ def recover(bundle: dict[str, Any], directory: Path, ocr: pylopdf.OcrEngine, *, 
         covered.update(used)
         if inferred:
             choices.append("normalized YOLO-gated physical rows with wrapped continuations")
+    covered.difference_update(retained_headers)
     return {
         "markdown": render_tables(matrices, bullets=bullets, spans=spans)
         + "\n\n"
@@ -110,6 +113,7 @@ def recover(bundle: dict[str, Any], directory: Path, ocr: pylopdf.OcrEngine, *, 
         "recognized_words": len(recognized),
         "source_ids_covered": len(covered),
         "source_ids_total": len(words),
+        "source_header_ids_retained": len(retained_headers),
         "detection_cost": "reuses normalized YOLO detections; excludes detector inference",
         "header_policy": "native header or neutral vector labels; inferred first row is unverified",
     }

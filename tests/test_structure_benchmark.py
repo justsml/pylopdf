@@ -15,6 +15,8 @@ from bench.structure_core import markdown_spans, markdown_tables, render_tables,
 from bench.structure_hosted import HostedVision
 from bench.structure_summary import summarize
 
+import pylopdf
+
 
 def test_summary_keeps_failed_calls_in_reference_denominators() -> None:
     reference = {
@@ -54,6 +56,47 @@ def test_summary_keeps_failed_calls_in_reference_denominators() -> None:
 
 def source_words() -> list[dict[str, Any]]:
     return [{"id": "a", "text": "Heading"}, {"id": "b", "text": "42.00"}]
+
+
+@pytest.mark.parametrize("adapter", ["native-bullets", "hybrid-bullets"])
+def test_neutral_header_fallback_keeps_displaced_source_words(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    adapter: str,
+) -> None:
+    header = "Unresolved heading Handgun Handgun " + "multiple grouped field labels " * 5
+    content = "\n".join(
+        [
+            text_op(header, 60, 710, size=3),
+            text_op("Alpha", 60, 660),
+            text_op("42", 310, 660),
+            "50 640 500 100 re S 50 690 m 550 690 l S 300 640 m 300 690 l S",
+        ]
+    )
+    directory = tmp_path / "sample"
+    directory.mkdir()
+    data = page_pdf(content)
+    (directory / "input.pdf").write_bytes(data)
+    (directory / "yolo-normalized-geometry-wrapped-detections.json").write_text("[]")
+    with pylopdf.open(stream=data) as document:
+        words = [
+            {"id": f"p0w{i}", "text": word[4], "bbox": list(word[:4]), "logical_bbox": list(word[:4])}
+            for i, word in enumerate(document[0].get_text("words"))
+        ]
+    monkeypatch.setattr(structure, "ARTIFACTS", tmp_path)
+    report = tmp_path / "report.json"
+    report.write_text(
+        json.dumps(
+            {"results": [{"case": "sample", "adapter": "yolo-normalized-geometry-wrapped", "sha256": "same-input"}]}
+        )
+    )
+    monkeypatch.setattr(structure, "REPORT", report)
+    output = structure.run_adapter(
+        {"name": "sample", "sha256": "same-input", "words": words}, MagicMock(adapter=adapter), 4096
+    )
+    assert output["tables"] == [[["Column 1", "Column 2"], ["Alpha", "42"]]]
+    assert header.strip() in output["markdown"]
+    assert output["markdown"].count("Handgun") == 2
 
 
 @pytest.mark.parametrize(

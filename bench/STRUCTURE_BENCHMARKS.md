@@ -93,6 +93,10 @@ adapters. They do not support the new derivatives without a new CPU conversion.
   a very large merged header is unresolved. Header-guided records extend a short
   vector header into the page body and attach description continuations. These
   are experimental heuristics; unrelated prose below a header can be absorbed.
+  Neutral labels retain the displaced source header words once outside the grid,
+  without text-based deduplication of repeated labels. The earlier lossy prototype
+  is archived in `structure-artifacts/history/before-header-retention.tar.gz`;
+  its cell scores alone did not reveal 65 missing NICS source tokens.
 - olmOCR uses its public no-anchoring v4 YAML prompt, BF16, SDPA, greedy decoding,
   and a default 4,096-token output boundary. The text and patch variants are
   experimental prompts, not the recommended upstream conversion pipeline.
@@ -237,14 +241,24 @@ The separate `olmocr-highres-image` NICS derivative keeps the original 4,096-tok
 output boundary and uses a fresh white-background CPU render of the original PDF
 at a 2,048-pixel longest side. It reads `page-highres.png`, not an upsampled version
 of the 1,288-pixel screenshot. The retained `page-highres.json` records PDF/PNG
-hashes, dimensions, DPI, and renderer provenance. Run it on the prepared remote
-worker with `--adapter olmocr-highres-image --case corpus-nics-background-checks-2015-11
---report bench/results/structure-remote-highres.json`. This is a resolution control,
-not a replacement for the longer-output control.
+hashes, dimensions, DPI, and renderer provenance. Prepare the image on CPU and
+copy it with its sidecar to the worker before the remote inference command:
+
+```bash
+CUDA_VISIBLE_DEVICES='' uv run python -m bench.structure --prepare-highres \
+  --case corpus-nics-background-checks-2015-11
+PYTHONPATH=. /workspace/study-env/bin/python -m bench.structure \
+  --adapter olmocr-highres-image --case corpus-nics-background-checks-2015-11 \
+  --report bench/results/structure-remote-highres.json
+```
+
+This is a resolution control, not a replacement for the longer-output control.
 
 The user authorized $15 total remote spend, including rental and API inference.
-The rental has a two-hour destruction watchdog and must also be destroyed after
-artifact collection. Record provider charges or explicitly labeled estimates
+The rental initially had a two-hour destruction watchdog. Dense NF4 generation
+required extending that guard to three hours (about $1.30 maximum rental at the
+observed rate), within the authorized total cap. Destroy it after artifact
+collection rather than waiting for the guard. Record provider charges or explicitly labeled estimates
 in the final findings; do not infer actual billed dollars from elapsed time alone.
 
 Generate the compact, failure-inclusive comparison after all writers finish:

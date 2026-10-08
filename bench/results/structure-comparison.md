@@ -11,7 +11,7 @@ Truncated counts are lower bounds: older failed calls can lack generation metada
 ## structure-latest
 
 Source report run: 2026-10-08T03:18:26.318705+00:00
-Snapshot SHA-256: `617389757e5971a5545d37f311660f269625170f6c9c6c08f29c4178ec8d6cc8`.
+Snapshot SHA-256: `4b3dc67d04bbe36ac77dde8c782b2214b10d1d9447a661577c22914fe63cea4a`.
 
 | Adapter | Calls | Unsupported | Positive exact | Negative exact | Cells | Relation recall | Precision | Corpus cells | Errors | Truncated |
 | --- | ---: | ---: | --- | --- | --- | --- | --- | --- | ---: | ---: |
@@ -26,20 +26,16 @@ Snapshot SHA-256: `617389757e5971a5545d37f311660f269625170f6c9c6c08f29c4178ec8d6
 | geometry-bullets | 28 | 0 | 6/9 | 4/6 | 61/83 | 79/111 | 79/126 | 12/35 | 0 | 0 |
 | geometry-wrapped | 28 | 0 | 7/9 | 4/6 | 73/83 | 96/111 | 96/143 | 29/35 | 0 | 0 |
 | geometry-wrapped-bullets | 28 | 0 | 7/9 | 4/6 | 73/83 | 96/111 | 96/143 | 29/35 | 0 | 0 |
-| native-bullets | 28 | 0 | 1/9 | 6/6 | 17/83 | 21/111 | 21/24 | 12/35 | 0 | 0 |
 | yolo-normalized-geometry-wrapped | 28 | 0 | 7/9 | 6/6 | 73/83 | 96/111 | 96/99 | 29/35 | 0 | 0 |
 | qwen-image | 28 | 0 | 0/9 | 6/6 | 0/83 | 0/111 | — | 0/35 | 0 | 1 |
 | qwen-text | 28 | 0 | 0/9 | 6/6 | 0/83 | 0/111 | — | 0/35 | 1 | 3 |
 | qwen-patch | 28 | 0 | 0/9 | 0/6 | 0/83 | 0/111 | 0/32 | 0/35 | 25 | 0 |
-| native-header-bullets | 28 | 0 | 1/9 | 6/6 | 17/83 | 21/111 | 21/24 | 35/35 | 0 | 0 |
 | repair-qwen-image | 28 | 0 | 0/9 | 1/6 | 21/83 | 49/111 | 49/200 | 0/35 | 0 | 0 |
 | repair-qwen-text | 28 | 0 | 2/9 | 3/6 | 49/83 | 54/111 | 54/140 | 0/35 | 1 | 0 |
 | retained-docling | 28 | 6 | 1/4 | 5/6 | 10/35 | 15/46 | 15/25 | 23/35 | 0 | 0 |
 | retained-docling-formulas | 28 | 6 | 1/4 | 5/6 | 10/35 | 15/46 | 15/25 | 23/35 | 0 | 0 |
 | retained-marker-fast | 28 | 6 | 1/4 | 6/6 | 29/35 | 28/46 | 28/46 | 12/35 | 0 | 0 |
 | ocr-geometry-wrapped | 28 | 0 | 8/9 | 5/6 | 82/83 | 108/111 | 108/133 | 29/35 | 0 | 0 |
-| hybrid-html | 28 | 0 | 9/9 | 6/6 | 83/83 | 111/111 | 111/111 | 35/35 | 0 | 0 |
-| hybrid-bullets | 28 | 0 | 9/9 | 6/6 | 83/83 | 111/111 | 111/111 | 35/35 | 0 | 0 |
 | olmocr-normalized | 3 | 0 | 3/3 | — | 27/27 | 36/36 | 36/36 | — | 0 | 0 |
 | olmocr-compact-text | 7 | 0 | 1/4 | 1/1 | 36/39 | 44/53 | 44/53 | 0/35 | 1 | 0 |
 | olmocr-4bit-text | 2 | 0 | — | — | — | — | — | 0/35 | 1 | 0 |
@@ -48,6 +44,10 @@ Snapshot SHA-256: `617389757e5971a5545d37f311660f269625170f6c9c6c08f29c4178ec8d6
 | olmocr-row-crop | 2 | 0 | — | — | — | — | — | 7/35 | 0 | 1 |
 | qwen-compact-text | 7 | 0 | 0/4 | 1/1 | 0/39 | 0/53 | — | 0/35 | 0 | 0 |
 | qwen-compact-patch | 5 | 0 | 0/3 | 0/1 | 0/27 | 0/36 | — | 0/23 | 5 | 0 |
+| native-bullets | 28 | 0 | 1/9 | 6/6 | 17/83 | 21/111 | 21/24 | 12/35 | 0 | 0 |
+| native-header-bullets | 28 | 0 | 1/9 | 6/6 | 17/83 | 21/111 | 21/24 | 35/35 | 0 | 0 |
+| hybrid-html | 28 | 0 | 9/9 | 6/6 | 83/83 | 111/111 | 111/111 | 35/35 | 0 | 0 |
+| hybrid-bullets | 28 | 0 | 9/9 | 6/6 | 83/83 | 111/111 | 111/111 | 35/35 | 0 | 0 |
 
 ## structure-hosted
 

@@ -15,6 +15,31 @@ _MAX_HEADER_ROWS = 3
 _MIN_RECORD_COLUMNS = 3
 
 
+def header_word_ids(table: pylopdf.Table, words: list[dict[str, Any]]) -> set[str]:
+    """Keep the original words when an unresolved first grid row gains neutral labels."""
+    first = next((index for index, row in enumerate(table.extract()) if any(row)), 0)
+    boxes = [cell for cell in table.cells[first * table.col_count : (first + 1) * table.col_count] if cell is not None]
+    return {
+        word["id"]
+        for word in words
+        if any(
+            box.x0 <= (word["bbox"][0] + word["bbox"][2]) / 2 <= box.x1
+            and box.y0 <= (word["bbox"][1] + word["bbox"][3]) / 2 <= box.y1
+            for box in boxes
+        )
+    }
+
+
+def unresolved_header_ids(page: pylopdf.Page, words: list[dict[str, Any]]) -> set[str]:
+    """Identify displaced source text without deduplicating repeated header labels."""
+    retained = set()
+    for table in page.find_tables():
+        rows = [row for row in table.extract() if any(row)]
+        if rows and max(len(value or "") for value in rows[0]) > _MAX_HEADER_CHARS:
+            retained.update(header_word_ids(table, words))
+    return retained
+
+
 def native_records(page: pylopdf.Page) -> list[list[list[str]]]:
     """Keep detected data cells, using neutral labels for unresolved large headers."""
     matrices = []

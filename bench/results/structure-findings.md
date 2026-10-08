@@ -39,6 +39,12 @@ column labels preserve all 12 checked NICS cells without pretending to understan
 its large merged header. Bullets are scored on recovered cell matrices, not on
 the semantic correctness of their labels. Inferred first-row labels and header
 extensions still need scrutiny; unrelated prose below a header can be absorbed.
+The original neutral-label prototype dropped 65 extracted NICS header tokens.
+Cell spot checks did not reveal that loss. The corrected adapters retain those
+source words once as prose, including repeated labels, and rerunning all affected
+CPU cohorts kept the grid/record scores while reducing NICS missing-source tokens
+from 65 to zero. Prior outputs and timings remain archived. This token agreement
+does not establish correct header hierarchy or complete-page reading order.
 
 ## Screenshots plus source text
 

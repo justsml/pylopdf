@@ -33,7 +33,7 @@ from bench.structure_core import (
     validate_patch,
     visible_text,
 )
-from bench.structure_native import header_guided_records, native_records
+from bench.structure_native import header_guided_records, native_records, unresolved_header_ids
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -65,6 +65,36 @@ def write_json(path: Path, value: Any) -> None:  # noqa: ANN401
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n")
     temporary.replace(path)
+
+
+def prepare_highres(bundles: list[dict[str, Any]]) -> None:
+    """Render selected original PDFs at 2,048 pixels on CPU with independent provenance."""
+    for bundle in bundles:
+        directory = ARTIFACTS / bundle["name"]
+        source = directory / "input.pdf"
+        digest = hashlib.sha256(source.read_bytes()).hexdigest()
+        if digest != bundle["sha256"]:
+            msg = f"refusing high-resolution preparation of changed PDF: {bundle['name']}"
+            raise ValueError(msg)
+        with pylopdf.open(source) as document:
+            page = document[0]
+            dpi = 72 * 2048 / max(page.rect.width, page.rect.height)
+            pixmap = page.get_pixmap(dpi=dpi, background=(255, 255, 255))
+            target = directory / "page-highres.png"
+            pixmap.save(target)
+            write_json(
+                directory / "page-highres.json",
+                {
+                    "original_pdf_sha256": digest,
+                    "png_sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
+                    "width": pixmap.width,
+                    "height": pixmap.height,
+                    "dpi": dpi,
+                    "renderer": "pylopdf CPU; original PDF rerender, not screenshot upsampling",
+                    "renderer_version": metadata.version("pylopdf"),
+                    "preparation_code_sha256": hashlib.sha256((ROOT / "bench/structure.py").read_bytes()).hexdigest(),
+                },
+            )
 
 
 def prepare() -> list[dict[str, Any]]:
@@ -331,11 +361,13 @@ def run_adapter(bundle: dict[str, Any], engine: Engines, limit: int) -> dict[str
             guided = bool(matrices)
             if not guided:
                 matrices = native_records(page)
+            retained_headers = set() if guided else unresolved_header_ids(page, words)
             boxes = [table.bbox for table in page.find_tables()]
             outside = [
                 word
                 for word in words
-                if not any(
+                if word["id"] in retained_headers
+                or not any(
                     box.x0 <= (word["bbox"][0] + word["bbox"][2]) / 2 <= box.x1
                     and box.y0 <= word["bbox"][1] <= (page.rect.y1 if guided else box.y1)
                     for box in boxes
@@ -749,11 +781,12 @@ def rescore(report: dict[str, Any]) -> None:
     REPORT.with_suffix(".md").write_text(format_report(report))
 
 
-def main() -> None:  # noqa: C901
+def main() -> None:  # noqa: C901, PLR0912
     """Checkpoint every case so model failures cannot discard completed experiments."""
     global REPORT  # noqa: PLW0603 - one CLI-selected report for dependent replay adapters.
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepare", action="store_true")
+    parser.add_argument("--prepare-highres", action="store_true")
     parser.add_argument(
         "--adapter",
         action="append",
@@ -826,6 +859,8 @@ def main() -> None:  # noqa: C901
         if unknown:
             parser.error(f"unknown cases: {sorted(unknown)}")
         bundles = [bundle for bundle in bundles if bundle["name"] in args.case]
+    if args.prepare_highres:
+        prepare_highres(bundles)
     report: dict[str, Any] = (
         json.loads(REPORT.read_text())
         if REPORT.exists()
