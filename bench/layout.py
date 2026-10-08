@@ -86,7 +86,10 @@ def _synthetic_pdf(page_count: int, *, unicode_text: bool) -> bytes:
             if unicode_text:
                 # Unicode fixture data: invisible OCR text tests extraction,
                 # not OCR inference or embedded-font shaping performance.
-                text = "日本語の文章と抽出結果を確認します。" * 4
+                text = (
+                    "\u65e5\u672c\u8a9e\u306e\u6587\u7ae0\u3068\u62bd\u51fa\u7d50\u679c\u3092\u78ba\u8a8d\u3057\u307e\u3059。"
+                    * 4
+                )
                 page.insert_ocr_text_layer([(40, y, 550, y + 12, text) for y in range(70, 430, 18)])
             else:
                 text = "Positioned text supports Markdown and structured extraction. " * 2
@@ -263,7 +266,9 @@ def main() -> None:
             continue
     metadata = {
         "Run at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-        "Environment": f"{platform.platform()} / Python {platform.python_version()} / {platform.processor()}",
+        "Environment": (
+            f"{platform.platform()} / Python {platform.python_version()} / {platform.processor() or platform.machine()}"
+        ),
         "Machine": f"{platform.machine()} / {os.cpu_count()} logical CPUs",
         "pylopdf": pylopdf.__version__,
         "Font extras": ", ".join(font_extras) or "none",

@@ -74,6 +74,13 @@ bench = [
     "pypdf>=5",
     "pdfplumber>=0.11",
 ]
+# Rich conversion studies keep model-backed layout and Markdown parsing optional.
+bench-rich = [
+    { include-group = "bench" },
+    "pymupdf4llm>=1.28.2",
+    "markdown-it-py>=4.0",
+    "mdit-py-plugins>=0.6",
+]
 # Zensical documentation site. CI uses --only-group docs --no-install-project.
 docs = [
     "zensical>=0.0.51,<0.1",
@@ -119,6 +126,7 @@ pylopdf-ocr-models = { workspace = true }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 
 [[tool.mypy.overrides]]
 # pypdf is used only by a manually run fixture generator, not as a dev dependency.

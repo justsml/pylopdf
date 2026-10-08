@@ -36,6 +36,11 @@ overview.
   Reports are written separately to `bench/results/layout-latest.{md,json}`.
   Save a baseline with `--output <path>.json`, then use `--baseline <path>.json`
   to compare matching inputs and complete outputs in the same environment.
+- `uv sync --group bench-rich && uv run python -m bench.features` — compare
+  rich-content behavior across PDF text and Markdown converters. Preserve the
+  input PDFs, complete outputs, warnings/errors, versions, and options together
+  with `bench/results/features-latest.{md,json}`. `bench/FEATURE_MAP.md` defines
+  coverage and review criteria; syntax counts are observations, not quality scores.
 - `py -3.14t bench/free_threaded.py` — measure independent-document extraction
   without the GIL. Results are written separately to
   `bench/results/free-threaded-latest.md` so regular benchmark runs cannot

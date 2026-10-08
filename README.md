@@ -251,6 +251,20 @@ repetition count for both runs. `--synthetic-only` runs without the corpus, and
 `--repetitions` defaults to five. Fixture generation and output hashing are
 outside the timed region.
 
+Compare rich-content conversion behavior separately:
+
+```bash
+uv sync --group bench-rich && uv run python -m bench.features
+```
+
+The [feature map](bench/FEATURE_MAP.md) describes Markdown policies and review
+criteria for math, Unicode/emoji, images, table spans/alignment, links, reading
+order, and document metadata. The study retains input PDFs and complete outputs
+from five libraries with explicit options, including PyMuPDF4LLM's legacy,
+layout, and HTML table modes. Parsed syntax probes help find losses and changes;
+they do not certify semantic correctness. OCR and formula-recognition models
+remain separate workloads. Results are written to `bench/results/features-latest.{md,json}`.
+
 ## Architecture
 
 ```
