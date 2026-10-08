@@ -17,7 +17,8 @@ uv run python bench/layout.py --baseline /tmp/layout-baseline.json
 uv run python -m bench.features
 ```
 
-The feature study compares pylopdf, PyMuPDF, PyMuPDF4LLM, pypdf, and pdfplumber.
+The initial feature study compares pylopdf, PyMuPDF, PyMuPDF4LLM, pypdf, and
+pdfplumber; the combined model study adds Docling and Marker.
 It includes pylopdf's opt-in text tables, PyMuPDF's explicit ActualText flag,
 PyMuPDF4LLM's legacy and model-backed layout paths, and HTML table output.
 Options and installed versions are recorded. PyMuPDF, pypdf, and pdfplumber are

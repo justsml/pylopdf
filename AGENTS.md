@@ -41,6 +41,10 @@ overview.
   input PDFs, complete outputs, warnings/errors, versions, and options together
   with `bench/results/features-latest.{md,json}`. `bench/FEATURE_MAP.md` defines
   coverage and review criteria; syntax counts are observations, not quality scores.
+- `bench/MODEL_BENCHMARKS.md` — isolated CPU Docling/Marker setup and rich-content
+  measurements. Retain original lightweight timings and model run provenance
+  separately in `bench/results/features-models.{md,json}`; publish model settings,
+  initialization cost, failures, image assets, and structured artifacts together.
 - `py -3.14t bench/free_threaded.py` — measure independent-document extraction
   without the GIL. Results are written separately to
   `bench/results/free-threaded-latest.md` so regular benchmark runs cannot

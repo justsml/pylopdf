@@ -165,6 +165,7 @@ def inspect_output(output: str, kind: str, case: FeatureCase) -> dict[str, Any]:
                 token.attrGet("style") for token in flat if token.type == "th_open" and token.attrGet("style")
             ],
             "images": sum(token.type == "image" for token in flat),
+            "image_sources": [token.attrGet("src") for token in flat if token.type == "image"],
             "links": [token.attrGet("href") for token in flat if token.type == "link_open"],
             "math": sum(token.type in {"math_inline", "math_block", "math_block_label"} for token in flat),
             "raw_html": sum(token.type in {"html_inline", "html_block"} for token in flat),
@@ -259,7 +260,7 @@ def run_case(case: FeatureCase, adapter: Adapter, repetitions: int, output_dir: 
                 repeatable &= hashlib.sha256(output.encode("utf-8")).hexdigest() == expected_hash
             result["warnings"] = sorted({str(item.message) for item in captured})
         path = output_dir / f"{case.name}--{adapter.name}.out"
-        path.write_text(expected, encoding="utf-8")
+        path.write_bytes(expected.encode("utf-8"))
         result.update(
             {
                 "status": "ok",
@@ -279,6 +280,26 @@ def format_report(report: dict[str, Any], output_dir: str) -> str:
     """Provide a review index without inventing a single correctness ranking."""
     lines = ["# Rich PDF to Markdown feature study", ""]
     lines.extend(f"- {key}: {value}" for key, value in report["metadata"].items())
+    for index, run in enumerate(report.get("additional_runs", [])):
+        versions = run["Versions"]
+        selected_versions = ", ".join(
+            f"{name} {versions.get(name, 'not installed')}"
+            for name in ("docling", "marker-pdf", "surya-ocr", "torch")
+        )
+        lines.extend(
+            [
+                "",
+                (
+                    f"Additional run {index}: {run['Run at']}; {run['Environment']}; "
+                    f"{run['CPU threads']} CPU threads; {run['Repetitions']} measured repetitions."
+                ),
+                f"Versions: {selected_versions}. OCR: {run['OCR']}. Hosted LLM: {run['Hosted LLM']}.",
+                (
+                    f"Source: {run['Source commit']}; dirty: {run['Source dirty']}. "
+                    "Model file revisions and hashes are retained in JSON."
+                ),
+            ]
+        )
     lines.extend(
         [
             "",

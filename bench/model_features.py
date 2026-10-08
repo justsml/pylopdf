@@ -121,7 +121,7 @@ def retain_artifacts(result: dict[str, Any], retained: dict[str, Any], leaf: Pat
     )
     serialized = payload if isinstance(payload, str) else json.dumps(payload, ensure_ascii=False, indent=2)
     structured_path = leaf / "structured.json"
-    structured_path.write_text(serialized, encoding="utf-8")
+    structured_path.write_bytes(serialized.encode("utf-8"))
     result["structured_output"] = str(Path(leaf.name) / structured_path.name)
     result["structured_sha256"] = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
     result["image_assets"] = []
@@ -157,6 +157,7 @@ def main() -> None:
     parser.add_argument("--repetitions", type=int, default=3)
     parser.add_argument("--threads", type=int, default=4)
     parser.add_argument("--case", action="append")
+    parser.add_argument("--resume", action="store_true", help="Keep successful matching adapter rows from --base")
     args = parser.parse_args()
     if args.repetitions < 1 or args.threads < 1 or args.output.suffix != ".json":
         parser.error("use positive repetitions/threads and a .json output")
@@ -207,6 +208,8 @@ def main() -> None:
         initialization_ms = (time.perf_counter() - start) * 1000
         print(f"{name}: initialized in {initialization_ms:.1f} ms; error={initialization_error}", flush=True)
         for record in report["cases"]:
+            if args.resume and any(item["adapter"] == name and item["status"] == "ok" for item in record["results"]):
+                continue
             case = cases[record["name"]]
             leaf = output_dir / f"{case.name}--{name}"
             leaf.mkdir(parents=True, exist_ok=True)

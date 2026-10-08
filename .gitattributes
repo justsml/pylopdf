@@ -1,4 +1,8 @@
 *.pdf binary
 # Converter output is retained verbatim for byte-identical benchmark comparisons.
 bench/results/feature-outputs/*.out -whitespace
+bench/results/feature-outputs/**/*.out -whitespace
+# Preserve artifact hashes across platforms with different line endings.
+bench/results/feature-outputs/** -text
+bench/results/features-models.log -text -whitespace
 models/pylopdf-ocr-models/src/pylopdf_ocr_models/ppocrv6_dict.txt text eol=lf

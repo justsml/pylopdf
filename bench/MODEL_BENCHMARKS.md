@@ -15,7 +15,8 @@ uv venv --python 3.12 /tmp/pylopdf-model-bench
 uv pip install --python /tmp/pylopdf-model-bench/bin/python \
   --extra-index-url https://download.pytorch.org/whl/cpu \
   -r bench/models-requirements.txt
-PYTHONPATH=src:. /tmp/pylopdf-model-bench/bin/python -m bench.model_features
+PYTHONPATH=src:. /tmp/pylopdf-model-bench/bin/python -m bench.model_features \
+  > bench/results/features-models.log 2>&1
 ```
 
 The pinned requirements capture the measured environment rather than declaring
@@ -50,8 +51,13 @@ not deterministic structured metadata or image encoding. Syntax and literal
 probes are observations, not an overall quality score or an equivalent-work
 speedup claim. Inspect the source PDF, full Markdown, structured output, and
 image files together.
+Retain the console log too: pipeline logging warnings, such as discarded table
+cells, can indicate content loss even when conversion returns successfully.
 
 Use repeated `--adapter` and `--case` arguments for a subset. `--base` accepts a
 previous combined report, allowing another adapter run to replace its own rows
 while retaining all other results and provenance. Use `--threads` and
 `--repetitions` to control the recorded execution settings.
+After an interruption, pass the partial report as `--base` and use `--resume`
+to preserve successful rows with their original run metadata and continue the
+remaining cases. Input hashes are checked before any model pipeline starts.

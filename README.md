@@ -265,6 +265,11 @@ layout, and HTML table modes. Parsed syntax probes help find losses and changes;
 they do not certify semantic correctness. [Initial findings](bench/FINDINGS.md)
 document concrete differences. OCR and formula-recognition models
 remain separate workloads. Results are written to `bench/results/features-latest.{md,json}`.
+The [optional CPU model study](bench/MODEL_BENCHMARKS.md) adds Docling with
+formula enrichment off/on and Marker in OCR-disabled fast mode on the same
+inputs. It retains structured artifacts and image files alongside Markdown in
+`bench/results/features-models.{md,json}`, with separate run provenance and
+model fingerprints.
 
 ## Architecture
 
