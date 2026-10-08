@@ -79,3 +79,12 @@ Snapshot SHA-256: `c2f6bd6c224df7c8e08d323457bf71dfd37224fb195cff17ec2b2dcc94615
 | qwen-text | 3 | 0 | — | — | — | — | — | 0/35 | 0 | 1 |
 | repair-qwen-text | 3 | 0 | — | — | — | — | — | 0/35 | 0 | 0 |
 
+## structure-remote48-long
+
+Source report run: 2026-10-08T04:51:00.292628+00:00
+Snapshot SHA-256: `3138c2d400d91afe1c8fb1e42bfbac3359ea5aebf23ff7c42a4a1ff69ec1a6d7`.
+
+| Adapter | Calls | Unsupported | Positive exact | Negative exact | Cells | Relation recall | Precision | Corpus cells | Errors | Truncated |
+| --- | ---: | ---: | --- | --- | --- | --- | --- | --- | ---: | ---: |
+| olmocr-image | 2 | 0 | — | — | — | — | — | 0/35 | 0 | 1 |
+

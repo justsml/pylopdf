@@ -115,9 +115,15 @@ olmOCR's 4,096-token response truncated, while Qwen emitted only one token.
 Compact dumps reduced NICS to about 52,700 input tokens, but olmOCR returned only
 the page notes. These prompt/input effects are separate from weight quantization.
 
-The matched remote base/LoRA study-input comparison and 16,384-token image-only
-output controls are still in progress. The final recommendation on training and
-output budgets requires those results. The local GPU coordinator
+Increasing the image-only output boundary to 16,384 tokens retained 0/35 checked
+corpus cells. Senate finished with 3,182 output tokens in 144.66 seconds; NICS used
+the complete 16,384-token boundary in 745.28 seconds and produced no parsed table.
+More output capacity alone therefore did not fix these dense inputs.
+
+The matched remote base/LoRA study-input comparison and a fresh 2,048-pixel NICS
+image control remain in progress. The latter keeps the original 4,096-token output
+boundary to distinguish visual detail from output length. The final recommendation
+on training and resolution requires those results. The local GPU coordinator
 was stopped and disabled at the user's instruction; all remaining GPU work is
 on the rented 48 GiB RTX A6000.
 

@@ -381,7 +381,8 @@ def run_adapter(bundle: dict[str, Any], engine: Engines, limit: int) -> dict[str
             "source_ids_total": len(words),
             "header_policy": "first recovered row; may be wrong without semantic evidence",
         }
-    image = importlib.import_module("PIL.Image").open(directory / "page.png").convert("RGB")
+    image_file = "page-highres.png" if name == "olmocr-highres-image" else "page.png"
+    image = importlib.import_module("PIL.Image").open(directory / image_file).convert("RGB")
     prompt = (
         "Read this document page in natural reading order and return Markdown. Preserve exact text, numbers, "
         "punctuation, and empty table cells. Use HTML tables with rowspan/colspan for merged cells. "
@@ -421,6 +422,7 @@ def run_adapter(bundle: dict[str, Any], engine: Engines, limit: int) -> dict[str
     if name.endswith("crop"):
         return run_crops(bundle, engine, image, prompt, limit)
     raw, details = engine.generate(image, prompt, limit)
+    details.update({"image_file": image_file, "image_size_pixels": list(image.size)})
     write_json(directory / f"{name}-generation.json", details)
     (directory / f"{name}-raw.txt").write_text(raw)
     if name.endswith("patch"):
@@ -783,6 +785,7 @@ def main() -> None:  # noqa: C901
             "olmocr-4bit-text",
             "olmocr-patch",
             "olmocr-normalized",
+            "olmocr-highres-image",
             "olmocr-yolo-crop",
             "olmocr-geometry-crop",
             "olmocr-row-crop",

@@ -80,6 +80,8 @@ def test_failed_patch_retains_generation_metadata(
     assert json.loads((directory / "qwen-patch-generation.json").read_text()) == {
         "truncated": truncated,
         "output_tokens": 4096,
+        "image_file": "page.png",
+        "image_size_pixels": [20, 20],
     }
 
 

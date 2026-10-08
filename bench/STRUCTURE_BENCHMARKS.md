@@ -233,6 +233,15 @@ and compact source words, greedy decoding, and 4,096 output tokens. The interrup
 local compact-patch cohort is retained as partial history, not a matched training
 comparison. Remote weight hashes are retained independently of local cache hashes.
 
+The separate `olmocr-highres-image` NICS derivative keeps the original 4,096-token
+output boundary and uses a fresh white-background CPU render of the original PDF
+at a 2,048-pixel longest side. It reads `page-highres.png`, not an upsampled version
+of the 1,288-pixel screenshot. The retained `page-highres.json` records PDF/PNG
+hashes, dimensions, DPI, and renderer provenance. Run it on the prepared remote
+worker with `--adapter olmocr-highres-image --case corpus-nics-background-checks-2015-11
+--report bench/results/structure-remote-highres.json`. This is a resolution control,
+not a replacement for the longer-output control.
+
 The user authorized $15 total remote spend, including rental and API inference.
 The rental has a two-hour destruction watchdog and must also be destroyed after
 artifact collection. Record provider charges or explicitly labeled estimates
