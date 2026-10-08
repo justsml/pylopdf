@@ -263,3 +263,18 @@ def test_multi_page_pixmap() -> None:
     doc = pylopdf.open(stream=build_pdf(["One", "Two"], page_size=(200, 100)))
     pix = doc[1].get_pixmap()
     assert (pix.width, pix.height) == (200, 100)
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Windows mode bits do not expose the POSIX contract")
+def test_pixmap_save_new_file_is_private_with_permissive_umask(one_page_pdf: bytes, tmp_path: Path) -> None:
+    pixmap = pylopdf.open(stream=one_page_pdf)[0].get_pixmap()
+    target = tmp_path / "private.png"
+    previous_umask = os.umask(0)
+    try:
+        pixmap.save(target)
+    finally:
+        os.umask(previous_umask)
+
+    assert stat.S_IMODE(target.stat().st_mode) == 0o600
+    assert target.read_bytes() == pixmap.tobytes()
+    assert not list(tmp_path.glob(".pylopdf-*.tmp"))

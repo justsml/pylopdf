@@ -27,7 +27,7 @@ from pylopdf.pylopdf_core import LimitError, OcrError, PasswordError, PdfError, 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator, Sequence
     from types import TracebackType
-    from typing import Any, NoReturn, Self
+    from typing import Any, BinaryIO, NoReturn, Self
 
 __version__ = "0.13.0"
 __all__ = [
@@ -233,25 +233,41 @@ def _markdown_output_limit_error(max_size: int) -> LimitError:
     )
 
 
-def _temporary_sibling_path(target: Path) -> Path:
-    """Create one same-directory output path with normal umask permissions."""
+def _temporary_sibling_file(target: Path) -> tuple[Path, BinaryIO]:
+    """Keep one exclusively created private output file open through writing."""
     for _ in range(_TEMPORARY_FILE_ATTEMPTS):
         candidate = target.parent / f".pylopdf-{secrets.token_hex(16)}.tmp"
         try:
-            descriptor = os.open(candidate, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o666)
+            descriptor = os.open(candidate, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         except FileExistsError:
             continue
-        os.close(descriptor)
-        return candidate
+        try:
+            file = os.fdopen(descriptor, "wb")
+        except BaseException:
+            with suppress(OSError):
+                os.close(descriptor)
+            with suppress(OSError):
+                candidate.unlink()
+            raise
+        return candidate, file
     msg = f"failed to create a unique temporary output beside {target}"
     raise FileExistsError(msg)
 
 
+def _verify_temporary_file(temporary: Path, file: BinaryIO) -> None:
+    """Reject a named temporary replaced while its original descriptor was open."""
+    written = os.fstat(file.fileno())
+    named = temporary.lstat()
+    if not stat.S_ISREG(named.st_mode) or (named.st_dev, named.st_ino) != (written.st_dev, written.st_ino):
+        msg = "temporary output was replaced during writing"
+        raise PdfError(msg)
+
+
 def _atomic_save_file(
     filename: str | os.PathLike[str],
-    writer: Callable[[str], None],
+    writer: Callable[[BinaryIO], None],
 ) -> None:
-    """Write a sibling file completely before atomically replacing the target."""
+    """Write through the created descriptor before atomically replacing target."""
     requested = Path(filename)
     try:
         target = requested.resolve(strict=False) if requested.is_symlink() else requested
@@ -261,23 +277,26 @@ def _atomic_save_file(
             target_mode = None
         else:
             target_mode = stat.S_IMODE(target_metadata.st_mode) if stat.S_ISREG(target_metadata.st_mode) else None
-        temporary = _temporary_sibling_path(target)
+        temporary, file = _temporary_sibling_file(target)
     except (OSError, RuntimeError) as exc:
         msg = f"failed to save {requested}: {exc}"
         raise PdfError(msg) from exc
     replaced = False
     try:
         try:
-            writer(str(temporary))
-        except PdfError as exc:
-            message = str(exc).replace(str(temporary), str(requested))
-            raise PdfError(message) from exc
-        try:
-            if target_mode is not None:
-                temporary.chmod(target_mode)
+            with file:
+                writer(file)
+                file.flush()
+                _verify_temporary_file(temporary, file)
+                if target_mode is not None:
+                    if hasattr(os, "fchmod"):
+                        os.fchmod(file.fileno(), target_mode)
+                    else:
+                        temporary.chmod(target_mode)
             temporary.replace(target)
-        except OSError as exc:
-            msg = f"failed to save {requested}: {exc}"
+        except (OSError, PdfError) as exc:
+            message = str(exc).replace(str(temporary), str(requested))
+            msg = f"failed to save {requested}: {message}"
             raise PdfError(msg) from exc
         replaced = True
     finally:
@@ -1851,7 +1870,9 @@ class Page:
             limit_code="search_input_size",
             input_label="search needle",
         )
-        hits = self._document._doc.search_page(self._page_number(), needle, max_hits)
+        page_number = self._page_number()
+        self._document._ensure_fallback_fonts()
+        hits = self._document._doc.search_page(page_number, needle, max_hits)
         self._document._emit_warnings()
         return [Rect(*hit) for hit in hits]
 
@@ -1884,7 +1905,9 @@ class Page:
         detector's results and is not a statistical probability.
         """
         clip_rect = None if clip is None else _validate_rect(clip, name="clip")
-        raw = self._document._doc.find_tables(self._page_number(), strategy, clip_rect)
+        page_number = self._page_number()
+        self._document._ensure_fallback_fonts()
+        raw = self._document._doc.find_tables(page_number, strategy, clip_rect)
         self._document._emit_warnings()
         tables = []
         for bbox, row_count, col_count, cells, cell_anchors, diagnostic_values in raw:
@@ -2756,6 +2779,16 @@ class Document:
         self._emit_warnings()
 
     @property
+    def _doc(self) -> _Document:
+        """Return the live core while keeping closed page views safe."""
+        self._ensure_not_closed()
+        return cast("_Document", self._core)
+
+    @_doc.setter
+    def _doc(self, core: _Document) -> None:
+        self._core: _Document | None = core
+
+    @property
     def needs_pass(self) -> bool:
         """Return whether opening required a password; remains true after auth."""
         self._ensure_not_closed()
@@ -2842,8 +2875,14 @@ class Document:
 
     def __iter__(self) -> Iterator[Page]:
         """Iterate over every page in order."""
-        for pno in range(self.page_count):
-            yield self[pno]
+        count = self.page_count
+        generation = self._generation
+        for pno in range(count):
+            self._ensure_open()
+            if generation != self._generation:
+                msg = "document structure changed during iteration"
+                raise StalePageError(msg)
+            yield Page(self, pno)
 
     def _bump_generation(self) -> None:
         """Record a structural change and invalidate existing page views."""
@@ -2935,12 +2974,13 @@ class Document:
             raise ValueError(msg)
         _validate_optional_positive_int("max_size", max_size)
         page_numbers: list[int] = []
-        page_iter = range(self.page_count) if pages is None else pages
+        count = self.page_count
+        page_iter = range(count) if pages is None else pages
         for pno in page_iter:
             if len(page_numbers) >= _MAX_MARKDOWN_PAGES:
                 msg = f"pages cannot contain more than {_MAX_MARKDOWN_PAGES} entries"
                 raise ValueError(msg)
-            self._lopdf_page_number(pno)
+            self._lopdf_page_number(pno, count=count)
             page_numbers.append(pno)
 
         size_counts: Counter[float] = Counter()
@@ -3310,12 +3350,16 @@ class Document:
         """
         self._ensure_open()
         page_numbers: list[int] = []
-        page_iter = range(self.page_count) if pages is None else pages
+        count = self.page_count
+        page_iter = range(count) if pages is None else pages
         for pno in page_iter:
             if len(page_numbers) >= _MAX_TEXT_EXTRACTION_PAGES:
                 msg = f"pages cannot contain more than {_MAX_TEXT_EXTRACTION_PAGES} entries"
                 raise ValueError(msg)
-            page_numbers.append(self._lopdf_page_number(pno))
+            page_numbers.append(self._lopdf_page_number(pno, count=count))
+        if not page_numbers:
+            return ""
+        self._ensure_fallback_fonts()
         text = self._doc.extract_text(page_numbers)
         self._emit_warnings()
         return text
@@ -3341,11 +3385,21 @@ class Document:
         Coordinates have a top-left origin and downward y. Vertical bbox extents
         approximate baseline ± a font-size ratio rather than real metrics.
         """
+        self._ensure_open()
+        if option not in {"text", "words", "blocks", "dict"}:
+            msg = f"option must be one of 'text' / 'words' / 'blocks' / 'dict': {option!r}"
+            raise ValueError(msg)
+        page_number = self._lopdf_page_number(pno)
+        self._ensure_fallback_fonts()
         if option == "text":
-            text = self._doc.extract_text([self._lopdf_page_number(pno)])
+            text = self._doc.extract_text([page_number])
             self._emit_warnings()
             return text
-        width, height, blocks = self._doc.extract_layout(self._lopdf_page_number(pno))
+        width, height, blocks = self._doc.extract_layout(
+            page_number,
+            include_spans=option == "dict",
+            include_words=option in {"words", "blocks"},
+        )
         self._emit_warnings()
         if option == "words":
             words: list[WordEntry] = []
@@ -3427,8 +3481,8 @@ class Document:
         """
         self._ensure_open()
         numbers = self._materialize_structural_pages(page_numbers, "page_numbers")
-        self._bump_generation()
         self._doc.select(numbers)
+        self._bump_generation()
 
     def _materialize_structural_pages(
         self,
@@ -3437,11 +3491,12 @@ class Document:
     ) -> list[int]:
         """Validate one bounded iterable of zero-based structural page inputs."""
         numbers: list[int] = []
+        count = self.page_count
         for pno in page_numbers:
             if len(numbers) >= _MAX_STRUCTURAL_PAGE_BATCH:
                 msg = f"{name} cannot contain more than {_MAX_STRUCTURAL_PAGE_BATCH} entries"
                 raise ValueError(msg)
-            numbers.append(self._lopdf_page_number(pno))
+            numbers.append(self._lopdf_page_number(pno, count=count))
         return numbers
 
     def insert_pdf(
@@ -3462,10 +3517,11 @@ class Document:
             msg = "cannot insert a document into itself"
             raise ValueError(msg)
         other._ensure_open()
-        if other.page_count == 0:
+        source_count = other.page_count
+        if source_count == 0:
             return
-        start = other._normalize_pno(from_page)
-        stop = other._normalize_pno(to_page)
+        start = other._normalize_pno(from_page, count=source_count)
+        stop = other._normalize_pno(to_page, count=source_count)
         step = 1 if start <= stop else -1
         count = abs(stop - start) + 1
         if count > _MAX_STRUCTURAL_PAGE_BATCH:
@@ -3473,8 +3529,8 @@ class Document:
             raise ValueError(msg)
         numbers = list(range(start, stop + step, step))
         position = None if start_at == -1 else self._insert_position(start_at, "start_at")
-        self._bump_generation()
         self._doc.merge_pages(other._doc, [n + 1 for n in numbers], position)
+        self._bump_generation()
 
     def new_page(self, pno: int = -1, width: float = 595.0, height: float = 842.0) -> Page:
         """Insert a blank page and return its :class:`Page`.
@@ -3496,8 +3552,8 @@ class Document:
         else:
             position = self._insert_position(pno, "pno")
             index = position
-        self._bump_generation()
         self._doc.new_page(position, width, height)
+        self._bump_generation()
         return self[index]
 
     def copy_page(self, pno: int, to: int = -1) -> None:
@@ -3508,8 +3564,8 @@ class Document:
         self._ensure_open()
         page_number = self._lopdf_page_number(pno)
         position = None if to == -1 else self._insert_position(to, "to")
-        self._bump_generation()
         self._doc.copy_page(page_number, position)
+        self._bump_generation()
 
     def _insert_position(self, value: int, name: str) -> int:
         """Validate an insertion position from 0 through ``page_count``."""
@@ -3723,12 +3779,13 @@ class Document:
             raise ValueError(msg)
         _validate_optional_positive_int("max_size", max_size)
         page_numbers: list[int] = []
-        page_iter = range(self.page_count) if pages is None else pages
+        count = self.page_count
+        page_iter = range(count) if pages is None else pages
         for pno in page_iter:
             if len(page_numbers) >= _MAX_RENDER_BATCH_PAGES:
                 msg = f"pages cannot contain more than {_MAX_RENDER_BATCH_PAGES} entries"
                 raise ValueError(msg)
-            page_numbers.append(self._lopdf_page_number(pno))
+            page_numbers.append(self._lopdf_page_number(pno, count=count))
         rgba = _normalize_background(background)
         if not page_numbers:
             return []
@@ -3848,20 +3905,20 @@ class Document:
         self._ensure_open()
         encryption = self._encryption_args(user_pw, owner_pw, permissions, object_streams=object_streams)
         self._apply_save_options(garbage=garbage, deflate=deflate)
-        writer: Callable[[str], None]
+        writer: Callable[[BinaryIO], None]
         if encryption is not None:
             user, owner, perms = encryption
             writer = functools.partial(
-                self._doc.save_encrypted,
+                self._doc.save_encrypted_to_file,
                 user_password=user,
                 owner_password=owner,
                 permissions=perms,
                 file_encryption_key=os.urandom(32),
             )
         elif object_streams:
-            writer = self._doc.save_with_object_streams
+            writer = functools.partial(self._doc.save_to_file, object_streams=True)
         else:
-            writer = self._doc.save
+            writer = self._doc.save_to_file
         _atomic_save_file(filename, writer)
 
     def tobytes(  # noqa: PLR0913  # Save options are keyword-only, like pymupdf.
@@ -3921,8 +3978,11 @@ class Document:
         return (user, owner, int(permissions))
 
     def close(self) -> None:
-        """Close the document; subsequent operations raise an error."""
+        """Release document resources; subsequent operations raise an error."""
         self._closed = True
+        self._core = None
+        self._source_path = None
+        self._source_bytes = None
 
     def _ensure_not_closed(self) -> None:
         """Reject operations on a closed document."""
@@ -3941,19 +4001,20 @@ class Document:
             msg = "this PDF is encrypted; open it with the password argument or call authenticate()"
             raise EncryptedDocumentError(msg)
 
-    def _normalize_pno(self, pno: int) -> int:
+    def _normalize_pno(self, pno: int, *, count: int | None = None) -> int:
         """Resolve negative indexing and return a valid zero-based page number."""
         self._ensure_open()
-        count = self._doc.page_count()
+        if count is None:
+            count = self._doc.page_count()
         normalized = pno + count if pno < 0 else pno
         if not 0 <= normalized < count:
             msg = f"page number {pno} is out of range (0..{count - 1})"
             raise IndexError(msg)
         return normalized
 
-    def _lopdf_page_number(self, pno: int) -> int:
+    def _lopdf_page_number(self, pno: int, *, count: int | None = None) -> int:
         """Validate a Python page index and convert it to one-based lopdf form."""
-        return self._normalize_pno(pno) + 1
+        return self._normalize_pno(pno, count=count) + 1
 
     def __enter__(self) -> Self:
         """Enter a context manager and return this document."""

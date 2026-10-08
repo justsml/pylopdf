@@ -2217,8 +2217,16 @@ impl TextPage {
         self.skipped_no_unicode
     }
 
-    pub(crate) fn layout(&self) -> Result<(f64, f64, Vec<BlockTuple>), TextPageLimit> {
-        Ok((self.width, self.height, assemble_layout(&self.lines)?))
+    pub(crate) fn layout(
+        &self,
+        include_spans: bool,
+        include_words: bool,
+    ) -> Result<(f64, f64, Vec<BlockTuple>), TextPageLimit> {
+        Ok((
+            self.width,
+            self.height,
+            assemble_layout(&self.lines, include_spans, include_words)?,
+        ))
     }
 
     pub(crate) fn search(
@@ -3763,7 +3771,11 @@ fn line_direction(line: &[GlyphRecord]) -> ((f64, f64), u8) {
 }
 
 /// Assemble collected glyphs into blocks, lines, spans, and words.
-fn assemble_layout(lines: &[Vec<GlyphRecord>]) -> Result<Vec<BlockTuple>, TextPageLimit> {
+fn assemble_layout(
+    lines: &[Vec<GlyphRecord>],
+    include_spans: bool,
+    include_words: bool,
+) -> Result<Vec<BlockTuple>, TextPageLimit> {
     let mut blocks = Vec::new();
     let mut prev_baseline: Option<f64> = None;
     let mut prev_size = 0.0_f64;
@@ -3804,8 +3816,16 @@ fn assemble_layout(lines: &[Vec<GlyphRecord>]) -> Result<Vec<BlockTuple>, TextPa
             let (direction, writing_mode) = line_direction(line);
             let tuple = (
                 glyphs_bbox(line),
-                split_spans(line)?,
-                split_words(line)?,
+                if include_spans {
+                    split_spans(line)?
+                } else {
+                    Vec::new()
+                },
+                if include_words {
+                    split_words(line)?
+                } else {
+                    Vec::new()
+                },
                 direction,
                 writing_mode,
             );
@@ -4297,7 +4317,7 @@ fn write_luma_alpha(output: &mut dyn Write, luma: &[u8], alpha: &[u8]) -> io::Re
 fn write_rgb_alpha(output: &mut dyn Write, rgb: &[u8], alpha: &[u8]) -> io::Result<()> {
     let mut buffer = [0u8; PNG_ALPHA_SCRATCH_BYTES];
     let mut used = 0;
-    for (rgb, alpha) in rgb.chunks_exact(3).zip(alpha) {
+    for (rgb, alpha) in rgb.as_chunks::<3>().0.iter().zip(alpha) {
         buffer[used..used + 4].copy_from_slice(&[rgb[0], rgb[1], rgb[2], *alpha]);
         used += 4;
         if used == PNG_ALPHA_SCRATCH_BYTES {

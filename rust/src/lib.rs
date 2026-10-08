@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 mod document;
 mod draw;
 mod extract;
+mod font_cache;
 mod form;
 mod generate;
 mod image_compression;
@@ -13,6 +14,7 @@ mod ocr_engine;
 #[path = "ocr_engine_emscripten.rs"]
 mod ocr_engine;
 mod pixmap;
+mod python_writer;
 mod text_replace;
 use document::{_Document, LimitError, PasswordError, PdfError};
 use ocr_engine::{_OcrEngine, OcrError};

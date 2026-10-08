@@ -5,7 +5,8 @@
 //! invisible rendering mode (`Tr 3`). It appears only through extraction and
 //! search, and adds almost no file size in any language.
 
-use std::collections::BTreeMap;
+use std::collections::HashMap;
+use std::fmt::{self, Write};
 
 use lopdf::{Dictionary, Document, Object, ObjectId, Stream, dictionary};
 
@@ -16,9 +17,25 @@ pub type OcrWord = (f64, f64, f64, f64, String);
 
 const MAX_OCR_CIDS: usize = 65_534;
 
+/// Format directly into fallibly grown storage before any PDF mutation.
+#[derive(Default)]
+struct OcrText(String);
+
+impl Write for OcrText {
+    fn write_str(&mut self, text: &str) -> fmt::Result {
+        self.0.try_reserve(text.len()).map_err(|_| fmt::Error)?;
+        self.0.push_str(text);
+        Ok(())
+    }
+}
+
+fn output_error(_: fmt::Error) -> String {
+    "failed to allocate OCR layer output".to_owned()
+}
+
 /// Assign one-based CIDs to all characters; CID 0 is `.notdef`.
-pub fn assign_cids(words: &[OcrWord]) -> Result<BTreeMap<char, u16>, String> {
-    let mut map = BTreeMap::new();
+pub fn assign_cids(words: &[OcrWord]) -> Result<HashMap<char, u16>, String> {
+    let mut map = HashMap::new();
     for (_, _, _, _, text) in words {
         for ch in text.chars() {
             if map.contains_key(&ch) {
@@ -32,6 +49,8 @@ pub fn assign_cids(words: &[OcrWord]) -> Result<BTreeMap<char, u16>, String> {
             }
             let cid =
                 u16::try_from(map.len() + 1).expect("the OCR CID count is bounded below u16::MAX");
+            map.try_reserve(1)
+                .map_err(|error| format!("failed to grow OCR character map: {error}"))?;
             map.insert(ch, cid);
         }
     }
@@ -41,29 +60,36 @@ pub fn assign_cids(words: &[OcrWord]) -> Result<BTreeMap<char, u16>, String> {
 /// Build a CID-to-Unicode UTF-16BE ToUnicode CMap.
 ///
 /// Split `bfchar` into specification-compliant blocks of 100 entries.
-pub fn build_to_unicode(cid_map: &BTreeMap<char, u16>) -> Vec<u8> {
-    let mut entries: Vec<(u16, char)> = cid_map.iter().map(|(&ch, &cid)| (cid, ch)).collect();
+pub fn build_to_unicode(cid_map: &HashMap<char, u16>) -> Result<Vec<u8>, String> {
+    let mut entries = Vec::new();
+    entries
+        .try_reserve_exact(cid_map.len())
+        .map_err(|error| format!("failed to allocate OCR Unicode entries: {error}"))?;
+    entries.extend(cid_map.iter().map(|(&ch, &cid)| (cid, ch)));
     entries.sort_unstable();
-    let mut out = String::from(
+    let mut out = OcrText::default();
+    out.write_str(
         "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n\
          /CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n\
          /CMapName /Adobe-Identity-UCS def\n/CMapType 2 def\n\
          1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n",
-    );
+    )
+    .map_err(output_error)?;
     for block in entries.chunks(100) {
-        out.push_str(&format!("{} beginbfchar\n", block.len()));
+        writeln!(out, "{} beginbfchar", block.len()).map_err(output_error)?;
         for &(cid, ch) in block {
-            out.push_str(&format!("<{cid:04X}> <"));
+            write!(out, "<{cid:04X}> <").map_err(output_error)?;
             let mut buf = [0u16; 2];
             for unit in ch.encode_utf16(&mut buf) {
-                out.push_str(&format!("{unit:04X}"));
+                write!(out, "{unit:04X}").map_err(output_error)?;
             }
-            out.push_str(">\n");
+            out.write_str(">\n").map_err(output_error)?;
         }
-        out.push_str("endbfchar\n");
+        out.write_str("endbfchar\n").map_err(output_error)?;
     }
-    out.push_str("endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n");
-    out.into_bytes()
+    out.write_str("endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n")
+        .map_err(output_error)?;
+    Ok(out.0.into_bytes())
 }
 
 /// Add the Type0/CIDFontType2/FontDescriptor/ToUnicode set for the OCR layer.
@@ -115,11 +141,12 @@ pub fn ocr_ops(
     crop: [f64; 4],
     page_rotation: i64,
     words: &[OcrWord],
-    cid_map: &BTreeMap<char, u16>,
+    cid_map: &HashMap<char, u16>,
     font_name: &str,
     text_rotation: u16,
-) -> Vec<u8> {
-    let mut out = b"q\n".to_vec();
+) -> Result<Vec<u8>, String> {
+    let mut out = OcrText::default();
+    out.write_str("q\n").map_err(output_error)?;
     for (x0, y0, x1, y1, text) in words {
         let (w, h) = (x1 - x0, y1 - y0);
         #[allow(clippy::cast_precision_loss)]
@@ -146,25 +173,24 @@ pub fn ocr_ops(
         };
         // Scale the natural width of one em per character to the bbox width.
         let sx = line_length / (chars * font_size);
-        out.extend_from_slice(
-            format!(
-                "BT\n/{font_name} {} Tf\n3 Tr\n{} {} {} {} {} {} Tm\n<",
-                draw::fmt(font_size),
-                draw::fmt(sx * rx),
-                draw::fmt(sx * ry),
-                draw::fmt(ux),
-                draw::fmt(uy),
-                draw::fmt(ox),
-                draw::fmt(oy),
-            )
-            .as_bytes(),
-        );
+        write!(
+            out,
+            "BT\n/{font_name} {} Tf\n3 Tr\n{} {} {} {} {} {} Tm\n<",
+            draw::fmt(font_size),
+            draw::fmt(sx * rx),
+            draw::fmt(sx * ry),
+            draw::fmt(ux),
+            draw::fmt(uy),
+            draw::fmt(ox),
+            draw::fmt(oy),
+        )
+        .map_err(output_error)?;
         for ch in text.chars() {
             let cid = cid_map.get(&ch).copied().unwrap_or(0);
-            out.extend_from_slice(format!("{cid:04X}").as_bytes());
+            write!(out, "{cid:04X}").map_err(output_error)?;
         }
-        out.extend_from_slice(b"> Tj\nET\n");
+        out.write_str("> Tj\nET\n").map_err(output_error)?;
     }
-    out.extend_from_slice(b"Q\n");
-    out
+    out.write_str("Q\n").map_err(output_error)?;
+    Ok(out.0.into_bytes())
 }

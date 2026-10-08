@@ -197,8 +197,10 @@ def test_unbounded_open_defers_malformed_page_tree_rejection_to_indexing() -> No
     doc = pylopdf.open(stream=pdf)
     assert doc.limits.max_pages is None
 
-    with pytest.raises(pylopdf.PdfError, match="cycle"):
-        _ = doc.page_count
+    # Failed indexing must never install an empty or partial cached order.
+    for _ in range(3):
+        with pytest.raises(pylopdf.PdfError, match="cycle"):
+            _ = doc.page_count
     with pytest.raises(pylopdf.PdfError, match="cycle"):
         _ = doc.complexity
 

@@ -24,6 +24,9 @@ use std::{
     sync::Arc,
 };
 
+#[cfg(unix)]
+use std::os::unix::fs::OpenOptionsExt;
+
 use crate::document::{LimitError, PdfError};
 
 const TEMPORARY_PATH_ATTEMPTS: usize = 100;
@@ -93,7 +96,12 @@ fn temporary_sibling(target: &Path) -> io::Result<(PathBuf, File)> {
         }
         let suffix = std::str::from_utf8(&encoded).expect("hex digits are valid UTF-8");
         let path = parent.join(format!(".pylopdf-{suffix}.tmp"));
-        match OpenOptions::new().write(true).create_new(true).open(&path) {
+        let mut options = OpenOptions::new();
+        options.write(true).create_new(true);
+        // Keep encoded output private until its final permissions are applied.
+        #[cfg(unix)]
+        options.mode(0o600);
+        match options.open(&path) {
             Ok(file) => return Ok((path, file)),
             Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
             Err(error) => return Err(error),

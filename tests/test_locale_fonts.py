@@ -176,3 +176,29 @@ def test_nonembedded_cjk_extract_text() -> None:
     doc = pylopdf.open(stream=build_nonembedded_cjk_pdf())
     doc.set_fallback_font(None)
     assert "こんにちは日本語" in doc.get_page_text(0)
+
+
+@pytest.mark.parametrize("operation", ["batch", "text", "dict", "search", "tables"])
+def test_extraction_first_discovers_fallback_fonts(operation: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Configure the same locale slots before extraction as before rendering."""
+    providers = tuple(provider for provider in pylopdf._bundled_font_providers() if provider.language == "ja")  # noqa: SLF001
+    if not providers:
+        pytest.skip("Japanese locale extra is not installed")
+    monkeypatch.setattr(pylopdf, "_bundled_font_providers", lambda: providers)
+    doc = pylopdf.open(stream=build_nonembedded_cjk_pdf())
+    page = doc[0]
+    if operation == "batch":
+        assert "こんにちは日本語" in doc.get_text()
+    elif operation == "text":
+        assert "こんにちは日本語" in page.get_text()
+    elif operation == "dict":
+        assert page.get_text("dict")["blocks"]
+    elif operation == "search":
+        assert page.search_for("日本語")
+    else:
+        assert list(page.find_tables()) == []
+
+    assert doc.__dict__["_fallback_configured"] is True
+    before = page.get_text("dict")
+    page.render()
+    assert page.get_text("dict") == before
