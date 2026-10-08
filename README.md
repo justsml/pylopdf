@@ -270,6 +270,10 @@ formula enrichment off/on and Marker in OCR-disabled fast mode on the same
 inputs. It retains structured artifacts and image files alongside Markdown in
 `bench/results/features-models.{md,json}`, with separate run provenance and
 model fingerprints.
+Only Markdown summaries and the compact layout timing/hash baseline are stored
+in Git. Full feature JSON, source copies, raw outputs, model sidecars, images,
+and logs are generated locally and ignored; run the documented commands to
+inspect them.
 
 ## Architecture
 

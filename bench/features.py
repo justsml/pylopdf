@@ -299,18 +299,42 @@ def format_report(report: dict[str, Any], output_dir: str) -> str:
                     f"{run['CPU threads']} CPU threads; {run['Repetitions']} measured repetitions."
                 ),
                 f"Versions: {selected_versions}. OCR: {run['OCR']}. Hosted LLM: {run['Hosted LLM']}.",
-                (
-                    f"Source: {run['Source commit']}; dirty: {run['Source dirty']}. "
-                    "Model file revisions and hashes are retained in JSON."
-                ),
+                f"Source: {run['Source commit']}; dirty: {run['Source dirty']}.",
+                f"Completion: {run.get('Completion', 'complete run')}.",
             ]
         )
+        initializations = {
+            result["adapter"]: result["initialization_ms"]
+            for case in report["cases"]
+            for result in case["results"]
+            if result.get("run_index") == index
+        }
+        lines.extend(f"- {name} pipeline initialization: {elapsed:.3f} ms" for name, elapsed in initializations.items())
+        weights = [
+            item for item in run.get("Model files", []) if item["file"].endswith((".safetensors", ".pth", ".pt"))
+        ]
+        if weights:
+            lines.extend(
+                [
+                    "",
+                    "Cached model weights at run completion (includes unused variants):",
+                    "",
+                    "| Repository | Revision | File | Bytes | SHA-256 |",
+                    "|---|---|---|---:|---|",
+                ]
+            )
+            lines.extend(
+                f"| {item['repository']} | {item['revision']} | {item['file']} | {item['bytes']} | {item['sha256']} |"
+                for item in weights
+            )
     lines.extend(
         [
             "",
             "Reproduce: `uv sync --group bench-rich && uv run python -m bench.features`.",
             "Optional Docling/Marker runs: see `bench/MODEL_BENCHMARKS.md`; their original run metadata",
             "and model fingerprints are retained separately in the JSON, alongside the earlier measurements.",
+            "Only summaries and the compact timing/hash baseline are committed. Full JSON, source copies,",
+            "raw outputs, structured sidecars, images, and logs are ignored local artifacts produced by the runners.",
             "One warmup plus median fresh-document conversion timings. Imports/model initialization occur",
             "before or during warmup. Page OCR is disabled; the Docling formula mode separately runs recognition.",
             "Source generation, syntax parsing, hashing, artifact serialization, and validation",
@@ -340,7 +364,7 @@ def format_report(report: dict[str, Any], output_dir: str) -> str:
                 "",
                 f"Source: {case['source']}",
                 "",
-                f"[Input PDF]({output_dir}/{case['name']}.pdf)",
+                f"Local input after running: `{output_dir}/{case['name']}.pdf`",
                 "",
                 "| Adapter | Kind | Median ms | Text probes | H/B/I/code/list/table/image/math/HTML/link | Result |",
                 "|---|---|---:|---:|---|---|",
@@ -368,11 +392,9 @@ def format_report(report: dict[str, Any], output_dir: str) -> str:
                 )
             )
             counts += "/" + str(len(observed["syntax"]["links"])) if observed["syntax"] else "/-"
-            link = f"[raw output]({output_dir}/{result['raw_output']})"
-            if not result["repeatable"]:
-                link += " (not repeatable)"
+            link = "repeatable" if result["repeatable"] else "not repeatable"
             if result.get("structured_output"):
-                link += f" / [structure]({output_dir}/{result['structured_output']})"
+                link += "; local sidecar"
             lines.append(
                 f"| {result['adapter']} | {result['kind']} | {result['median_ms']:.3f} | "
                 f"{sum(checks.values())}/{len(checks)} | {counts} | {link} |"

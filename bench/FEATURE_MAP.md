@@ -75,8 +75,9 @@ on, plus Marker in CPU fast mode with OCR disabled, on the same inputs.
 
 ## Interpreting the artifacts
 
-Start with [the feature report](results/features-latest.md), then open the
-input PDF and corresponding raw `.out` result. The JSON sidecar includes the
+Start with [the feature summary](results/features-latest.md), then run the study
+to generate the ignored local input PDFs and corresponding raw `.out` results.
+Only summaries and the compact timing/hash baseline are committed. The local JSON sidecar includes the
 literal values behind text probes, reference reading order, link destinations,
 HTML spans/superscripts, output hashes, and pylopdf's source-object inventory.
 That inventory is an observation through pylopdf's APIs, not an independent

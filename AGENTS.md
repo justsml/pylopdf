@@ -41,6 +41,9 @@ overview.
   input PDFs, complete outputs, warnings/errors, versions, and options together
   with `bench/results/features-latest.{md,json}`. `bench/FEATURE_MAP.md` defines
   coverage and review criteria; syntax counts are observations, not quality scores.
+  Commit Markdown summaries and the compact layout timing/hash baseline only;
+  full feature JSON, copied inputs, raw outputs, sidecars, images, and logs are
+  generated locally and ignored by Git.
 - `bench/MODEL_BENCHMARKS.md` — isolated CPU Docling/Marker setup and rich-content
   measurements. Retain original lightweight timings and model run provenance
   separately in `bench/results/features-models.{md,json}`; publish model settings,

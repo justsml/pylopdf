@@ -11,6 +11,7 @@ PyTorch, and four inference threads. Reproduce on Linux with:
 
 ```bash
 uv sync --group bench-rich
+uv run python -m bench.features
 uv venv --python 3.12 /tmp/pylopdf-model-bench
 uv pip install --python /tmp/pylopdf-model-bench/bin/python \
   --extra-index-url https://download.pytorch.org/whl/cpu \
@@ -47,7 +48,14 @@ Marker's sidecar serializes the Markdown renderer's output and metadata, with
 PIL image objects saved as separate files; it is not the separate JSON renderer's
 block-tree output. Docling's sidecar is its native document tree.
 
-The JSON retains original run metadata plus `additional_runs`; each model result
+Git stores the Markdown summaries, pinned environment, and compact timing/hash
+baseline. Full feature JSON, copied source PDFs, raw outputs, structured sidecars,
+images, and logs are generated locally and ignored. The summaries retain model
+versions, initialization timings, and cached weight revisions/hashes; use the
+local details to inspect content. From a clean checkout, generate the lightweight
+base study first, as shown above.
+
+The local JSON retains original run metadata plus `additional_runs`; each model result
 has a `run_index`. Original input hashes must match before adding measurements.
 Failures remain visible. Output repeatability refers to exact Markdown bytes,
 not deterministic structured metadata or image encoding. Syntax and literal
