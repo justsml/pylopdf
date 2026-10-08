@@ -68,8 +68,9 @@ the equation becomes positioned PDF glyphs and drawing rules; reading that PDF
 does not recover the original OMML tree automatically. The source archive and
 export provenance are retained in [the rich-fixture README](assets/rich/README.md).
 [Docling's formula enrichment](https://docling-project.github.io/docling/usage/enrichments/)
-is an example of a separate model-based reconstruction stage. Docling and Marker
-are not measured in this initial study.
+is a separate model-based reconstruction stage. The
+[optional model study](MODEL_BENCHMARKS.md) adds Docling with enrichment off and
+on, plus Marker in CPU fast mode with OCR disabled, on the same inputs.
 
 ## Interpreting the artifacts
 
@@ -95,7 +96,7 @@ that also reconstructs tables, extracts images, or runs OCR.
 
 ## Remaining coverage gaps
 
-The initial study does not measure full OCR inference, formula-recognition models,
+The studies do not measure full page OCR inference, Marker's OCR/formula-enabled modes,
 arbitrary skew, ruby/warichu, general mixed-direction paragraphs, nested radical
 and matrix equations, linked-image accessibility alt text, repeated-header removal,
 multi-page table continuation, XFA forms, attachment export, optional-content layers,

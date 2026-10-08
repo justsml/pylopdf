@@ -283,8 +283,11 @@ def format_report(report: dict[str, Any], output_dir: str) -> str:
         [
             "",
             "Reproduce: `uv sync --group bench-rich && uv run python -m bench.features`.",
+            "Optional Docling/Marker runs: see `bench/MODEL_BENCHMARKS.md`; their original run metadata",
+            "and model fingerprints are retained separately in the JSON, alongside the earlier measurements.",
             "One warmup plus median fresh-document conversion timings. Imports/model initialization occur",
-            "before or during warmup. OCR is disabled; source generation, syntax parsing, hashing, and validation",
+            "before or during warmup. Page OCR is disabled; the Docling formula mode separately runs recognition.",
+            "Source generation, syntax parsing, hashing, artifact serialization, and validation",
             "are outside the timer. Image embedding is enabled for PyMuPDF4LLM, so its output cost differs",
             "from converters that omit images. Timings across these tools are not equivalent-work rankings.",
             "",
@@ -342,6 +345,8 @@ def format_report(report: dict[str, Any], output_dir: str) -> str:
             link = f"[raw output]({output_dir}/{result['raw_output']})"
             if not result["repeatable"]:
                 link += " (not repeatable)"
+            if result.get("structured_output"):
+                link += f" / [structure]({output_dir}/{result['structured_output']})"
             lines.append(
                 f"| {result['adapter']} | {result['kind']} | {result['median_ms']:.3f} | "
                 f"{sum(checks.values())}/{len(checks)} | {counts} | {link} |"

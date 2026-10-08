@@ -1,0 +1,57 @@
+# Docling and Marker feature measurements
+
+The optional model study uses the same 23 PDF bytes as the lightweight study.
+[Its report](results/features-models.md) includes the earlier measurements with
+their original provenance, plus Docling, Docling with formula enrichment, and
+Marker's CPU fast mode. It does not rerun or relabel the earlier timings.
+
+These dependencies are deliberately isolated from the library and its regular
+development environment. The published model run uses Python 3.12, CPU-only
+PyTorch, and four inference threads. Reproduce on Linux with:
+
+```bash
+uv sync --group bench-rich
+uv venv --python 3.12 /tmp/pylopdf-model-bench
+uv pip install --python /tmp/pylopdf-model-bench/bin/python \
+  --extra-index-url https://download.pytorch.org/whl/cpu \
+  -r bench/models-requirements.txt
+PYTHONPATH=src:. /tmp/pylopdf-model-bench/bin/python -m bench.model_features
+```
+
+The pinned requirements capture the measured environment rather than declaring
+cross-platform support. Initial execution downloads model weights. Weights are
+cached outside the repository; the report records their repository, revision,
+file sizes, and SHA-256 digests. No hosted LLM API is used.
+
+The adapters use public entry points:
+
+- Docling `DocumentConverter` with `PdfPipelineOptions(do_ocr=False)`, CPU
+  acceleration, picture generation, and embedded-image Markdown export.
+- A separate Docling mode enables `do_formula_enrichment=True`. This is
+  model-based formula recognition even though page OCR is disabled. Recognition
+  depends on the preceding layout stage finding a formula region. See
+  [Docling's enrichment documentation](https://docling-project.github.io/docling/usage/enrichments/).
+- Marker `PdfConverter` with `mode='fast'`, `disable_ocr=True`, `use_llm=False`,
+  and one PDF text worker. This version's OCR-off setting also disables equation
+  recognition. Images are saved alongside the unmodified Markdown so relative
+  references resolve. See [Marker's public API](https://github.com/datalab-to/marker).
+
+Pipeline construction is recorded separately. Each input receives an unmeasured
+warmup, followed by three complete conversions with a fresh PDF input. Lazy
+model startup is included in warmup; median conversion timings include inference
+and Markdown export. Structured JSON and external image serialization, syntax
+probes, and hashing occur outside that timer. Structured artifacts retain the
+first warmup result and are not separately timed extraction benchmarks.
+
+The JSON retains original run metadata plus `additional_runs`; each model result
+has a `run_index`. Original input hashes must match before adding measurements.
+Failures remain visible. Output repeatability refers to exact Markdown bytes,
+not deterministic structured metadata or image encoding. Syntax and literal
+probes are observations, not an overall quality score or an equivalent-work
+speedup claim. Inspect the source PDF, full Markdown, structured output, and
+image files together.
+
+Use repeated `--adapter` and `--case` arguments for a subset. `--base` accepts a
+previous combined report, allowing another adapter run to replace its own rows
+while retaining all other results and provenance. Use `--threads` and
+`--repetitions` to control the recorded execution settings.
