@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import os
 import stat
 from collections.abc import Callable, Iterator
@@ -922,6 +923,8 @@ def test_atomic_save_cleans_up_after_descriptor_wrap_failure(tmp_path: Path, mon
         pylopdf._atomic_save_file(tmp_path / "output.pdf", lambda _file: None)  # noqa: SLF001
 
     assert len(descriptors) == 1
-    with pytest.raises(OSError, match="Bad file descriptor"):
+    # Check the portable error code instead of the platform's localized message.
+    with pytest.raises(OSError) as exc_info:  # noqa: PT011
         os.fstat(descriptors[0])
+    assert exc_info.value.errno == errno.EBADF
     assert list(tmp_path.glob(".pylopdf-*.tmp")) == []
