@@ -19,3 +19,8 @@ site/
 /bench/results/feature-outputs/
 /bench/results/features-*.json
 /bench/results/features-*.log
+
+# Structured recovery experiments retain full inputs and model outputs locally.
+/bench/results/structure-artifacts/
+/bench/results/structure-*.json
+/bench/results/structure-*.log
