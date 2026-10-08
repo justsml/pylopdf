@@ -106,9 +106,18 @@ than general PDF accuracy. None of the original 28 study inputs entered training
 The first attempt ended after nine steps with NVIDIA Xid 79; its losses and
 kernel log are preserved separately from model-quality failures.
 
-The matched remote base/LoRA study-input comparison is still running. Larger-memory
-and 16,384-token output controls are also in progress. The final recommendation
-on training and memory changes requires those results. The local GPU coordinator
+The 48 GiB control completed all nine full/compact text calls on Senate, NICS,
+and Form 1040 without allocation failures. Both olmOCR text variants and Qwen3B
+text retained 0/35 checked corpus cells; a separate Qwen fence repair also retained
+0/35. Larger memory therefore removed an execution limit without establishing
+correct recovery. The verbose NICS prompt occupied about 116,000 input tokens;
+olmOCR's 4,096-token response truncated, while Qwen emitted only one token.
+Compact dumps reduced NICS to about 52,700 input tokens, but olmOCR returned only
+the page notes. These prompt/input effects are separate from weight quantization.
+
+The matched remote base/LoRA study-input comparison and 16,384-token image-only
+output controls are still in progress. The final recommendation on training and
+output budgets requires those results. The local GPU coordinator
 was stopped and disabled at the user's instruction; all remaining GPU work is
 on the rented 48 GiB RTX A6000.
 

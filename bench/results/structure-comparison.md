@@ -67,3 +67,15 @@ Snapshot SHA-256: `c6ec01020a21efc45fb3e8525300a25ca8245ec44d47386a825fc028973bf
 | qwen-hosted-compact-row-patch | 2 | 0 | — | — | — | — | — | 0/35 | 2 | 0 |
 | qwen-jev-hosted-compact-row-patch | 2 | 0 | — | — | — | — | — | 0/35 | 2 | 0 |
 
+## structure-remote48
+
+Source report run: 2026-10-08T04:51:00.292628+00:00
+Snapshot SHA-256: `c2f6bd6c224df7c8e08d323457bf71dfd37224fb195cff17ec2b2dcc94615408`.
+
+| Adapter | Calls | Unsupported | Positive exact | Negative exact | Cells | Relation recall | Precision | Corpus cells | Errors | Truncated |
+| --- | ---: | ---: | --- | --- | --- | --- | --- | --- | ---: | ---: |
+| olmocr-text | 3 | 0 | — | — | — | — | — | 0/35 | 0 | 1 |
+| olmocr-compact-text | 3 | 0 | — | — | — | — | — | 0/35 | 0 | 0 |
+| qwen-text | 3 | 0 | — | — | — | — | — | 0/35 | 0 | 1 |
+| repair-qwen-text | 3 | 0 | — | — | — | — | — | 0/35 | 0 | 0 |
+
