@@ -1,0 +1,145 @@
+{
+  "schema_name": "DoclingDocument",
+  "version": "1.10.0",
+  "name": "fixture",
+  "origin": {
+    "mimetype": "application/pdf",
+    "binary_hash": 14971237277070857932,
+    "filename": "fixture.pdf"
+  },
+  "furniture": {
+    "self_ref": "#/furniture",
+    "children": [],
+    "content_layer": "furniture",
+    "name": "_root_",
+    "label": "unspecified"
+  },
+  "body": {
+    "self_ref": "#/body",
+    "children": [
+      {
+        "$ref": "#/texts/0"
+      },
+      {
+        "$ref": "#/pictures/0"
+      }
+    ],
+    "content_layer": "body",
+    "name": "_root_",
+    "label": "unspecified"
+  },
+  "groups": [],
+  "texts": [
+    {
+      "self_ref": "#/texts/0",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "section_header",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 40.0,
+            "t": 742.924,
+            "r": 188.068,
+            "b": 726.274,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            19
+          ]
+        }
+      ],
+      "orig": "Positioned fraction",
+      "text": "Positioned fraction",
+      "level": 1
+    },
+    {
+      "self_ref": "#/texts/1",
+      "parent": {
+        "$ref": "#/pictures/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "formula",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 100.0,
+            "t": 673.744,
+            "r": 199.448,
+            "b": 629.516,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            15
+          ]
+        }
+      ],
+      "orig": "x 2 + 1 y = z 2",
+      "text": "x 2 + 1 y = z 2"
+    }
+  ],
+  "pictures": [
+    {
+      "self_ref": "#/pictures/0",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/1"
+        }
+      ],
+      "content_layer": "body",
+      "label": "picture",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 94.62507629394531,
+            "t": 674.6286315917969,
+            "r": 199.31036376953125,
+            "b": 629.1314392089844,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            0
+          ]
+        }
+      ],
+      "captions": [],
+      "references": [],
+      "footnotes": [],
+      "image": {
+        "mimetype": "image/png",
+        "dpi": 72,
+        "size": {
+          "width": 104.0,
+          "height": 46.0
+        },
+        "uri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGgAAAAuCAIAAABLf8uHAAADcUlEQVRoge2aTUhqQRTH9WVUJEiiGyOKHlGBPkHQjRmIy6Ba1KYPWkhCm2wllEjt2yRYSNnOQMFN0a5dH/RFoFFQixSCIixMUrAo8h26EHq5yW2aa6PObyHH4XAc//fMzDmj4mw2K6J8Hwkfp7e3N6/Xe319PTw8rNVqhZ5TSfCHj9Pa2lpVVdXU1NTExITQEyoVeGXc2NgYvKbTaaVSKfB8SgZeGQc8PDxAus3Pzws6m1Iiy4NEIjE4OHh7e8vHuUIQZ3mcqk6n8+TkpKWlBWy3211TU/OTRxUOh2HJNzY2/iTI71PMp5RKpcbHx+vr6z0eTzE/VwjYe9zh4eHZ2RljRyKR4+NjhIeh1+s5x1dWVkwmU39/P0JM0mALV11d3dvb+/T09Pj42NfXV1tbixA0mUxyjkNBMzo6KhaLEWKSBrsc0el0sJqmp6efn58nJyc1Gg3/WJCq29vbog/hlpaWwOju7lar1Z8O5SEZA0cd53A4YK1B6vl8vm/Fen9/f319ZWzGgJGfT5EccjsoDuEuLy8zmQyUu2B0dHTwj/vvAzBg77fb7djmSwyfHdTAwABbOMgU2Ibgm7+8vIyMjOzv70PqffcDpFIppqmSRV4HxTplZ2ZmbDYbY4OC8BbjEQ5VtEqlqqurk8lkYKyurmIMXhzu7+8hn2AtFrWOK3VyOyhenQOFIbeDosIhwutaqaIIhUKfVRQkl8Fg4HTje61UNkBJ8TcfGMl1iMVi0Wj06uoKKqrNzc2v4ojn5uYEn6zAzM7OYo8JbTU0PwcHB19dBdGlysHp6anL5drd3S10gfbLJ3zR8fv9rfnASK5DKpVqb28PBoOF49BTlc3Q0FBDQ8Pi4mJhNypcHhcXF52dndChM4tUr9fDZsfpSYVDpOLKEVxQ4RChwiFChUOECocIFQ4RKhwiVDhEqHCIUOEQwSncxsZGIpFg7GQyub6+jjE4aeAULhQKLS8vM7bf7w8EAhiDEwfGq66dnZ22tjbGNhqNW1tbGIOTBs4b4K6uLolEsre319TUdHNzY7FYMAYnDczXSgsLC+fn55B3mUxGiJ8CyAGzcHA4aDQahUIBB0VzczPGyKSB+ccauVxuNpvj8Xh5qyYSoo67u7sry/94scAp3NHRkdVqhbXf09ODMSyZ4BQOil6oQmB3wxiTWP4DeXoikSV4ccIAAAAASUVORK5CYII="
+      },
+      "annotations": []
+    }
+  ],
+  "tables": [],
+  "key_value_items": [],
+  "form_items": [],
+  "pages": {
+    "1": {
+      "size": {
+        "width": 612.0,
+        "height": 792.0
+      },
+      "page_no": 1
+    }
+  }
+}

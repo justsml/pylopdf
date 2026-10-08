@@ -1,0 +1,67 @@
+{
+  "markdown": "LEFT0 several words of left column prose LEFT1 several words of left column prose LEFT2 several words of left column prose LEFT3 several words of left column prose LEFT4 several words of left column prose LEFT5 several words of left column prose LEFT6 several words of left column prose LEFT7 several words of left column prose\n\n## Full width heading\n\nRIGHT0 several words of right column prose RIGHT1 several words of right column prose RIGHT2 several words of right column prose RIGHT3 several words of right column prose RIGHT4 several words of right column prose RIGHT5 several words of right column prose RIGHT6 several words of right column prose RIGHT7 several words of right column prose",
+  "metadata": {
+    "table_of_contents": [
+      {
+        "title": "Full width heading",
+        "heading_level": null,
+        "page_id": 0,
+        "polygon": [
+          [
+            733.0878753662109,
+            37.34175109863281
+          ],
+          [
+            758.9000244140625,
+            37.34175109863281
+          ],
+          [
+            758.9000244140625,
+            201.17999267578125
+          ],
+          [
+            733.0878753662109,
+            201.17999267578125
+          ]
+        ]
+      }
+    ],
+    "page_stats": [
+      {
+        "page_id": 0,
+        "text_extraction_method": "pdftext",
+        "block_counts": [
+          [
+            "Span",
+            33
+          ],
+          [
+            "Line",
+            17
+          ],
+          [
+            "Text",
+            2
+          ],
+          [
+            "ListGroup",
+            2
+          ],
+          [
+            "SectionHeader",
+            1
+          ]
+        ],
+        "block_metadata": {
+          "llm_request_count": 0,
+          "llm_error_count": 0,
+          "llm_tokens_used": 0,
+          "previous_text": "",
+          "previous_type": "",
+          "previous_order": 0
+        }
+      }
+    ],
+    "debug_data_path": "debug_data/tmpq9d2mlhf"
+  }
+}

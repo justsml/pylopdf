@@ -1,0 +1,141 @@
+Loading weights:   0%|          | 0/770 [00:00<?, ?it/s]Loading weights: 100%|██████████| 770/770 [00:00<00:00, 8638.73it/s]
+docling: initialized in 5376.4 ms; error=None
+text-structure-and-literals / docling: ok
+positioned-math / docling: ok
+math-actualtext / docling: ok
+accessible-actualtext / docling: ok
+two-column-order / docling: ok
+unicode-cmap-and-emoji / docling: ok
+table-bordered / docling: ok
+table-borderless / docling: ok
+table-merged / docling: ok
+links-and-outline / docling: ok
+images-and-vectors / docling: ok
+image-only / docling: ok
+table-borderless-aligned / docling: ok
+rotated-columns / docling: ok
+footnotes-and-page-furniture / docling: ok
+rtl-visual-glyph-order / docling: ok
+tagged-reading-order / docling: ok
+corpus-usrguide / docling: ok
+corpus-senate-expenditures / docling: ok
+2026-10-07 19:11:15,403 MatchingPostProcessor WARNING  952 of 1363 pdf cells matched neither a row nor a column band of the 2x2 grid and were dropped from the table
+2026-10-07 19:11:52,073 MatchingPostProcessor WARNING  952 of 1363 pdf cells matched neither a row nor a column band of the 2x2 grid and were dropped from the table
+2026-10-07 19:12:28,519 MatchingPostProcessor WARNING  952 of 1363 pdf cells matched neither a row nor a column band of the 2x2 grid and were dropped from the table
+2026-10-07 19:13:05,153 MatchingPostProcessor WARNING  952 of 1363 pdf cells matched neither a row nor a column band of the 2x2 grid and were dropped from the table
+corpus-nics-background-checks-2015-11 / docling: ok
+corpus-pdfium-type3 / docling: ok
+corpus-f1040 / docling: ok
+omml-equations / docling: ok
+Loading weights:   0%|          | 0/770 [00:00<?, ?it/s]Loading weights: 100%|██████████| 770/770 [00:00<00:00, 8732.79it/s]
+[transformers] Model config: pad_token_id must be `None` or an integer within the vocabulary (between 0 and 31999), got 128002. This may result in unexpected behavior.
+Loading weights:   0%|          | 0/471 [00:00<?, ?it/s]Loading weights:  29%|██▉       | 136/471 [00:00<00:00, 1310.87it/s]Loading weights:  61%|██████▏   | 289/471 [00:00<00:00, 1437.37it/s]Loading weights: 100%|██████████| 471/471 [00:00<00:00, 1650.90it/s]
+[transformers] The tied weights mapping and config for this model specifies to tie model.text_model.embed_tokens.weight to lm_head.weight, but both are present in the checkpoints with different values, so we will NOT tie them. You should update the config with `tie_word_embeddings=False` to silence this warning.
+docling-formulas: initialized in 1890.2 ms; error=None
+text-structure-and-literals / docling-formulas: ok
+positioned-math / docling-formulas: ok
+math-actualtext / docling-formulas: ok
+accessible-actualtext / docling-formulas: ok
+two-column-order / docling-formulas: ok
+unicode-cmap-and-emoji / docling-formulas: ok
+table-bordered / docling-formulas: ok
+table-borderless / docling-formulas: ok
+table-merged / docling-formulas: ok
+links-and-outline / docling-formulas: ok
+images-and-vectors / docling-formulas: ok
+image-only / docling-formulas: ok
+table-borderless-aligned / docling-formulas: ok
+rotated-columns / docling-formulas: ok
+footnotes-and-page-furniture / docling-formulas: ok
+rtl-visual-glyph-order / docling-formulas: ok
+tagged-reading-order / docling-formulas: ok
+Loading weights:   0%|          | 0/770 [00:00<?, ?it/s]Loading weights: 100%|██████████| 770/770 [00:00<00:00, 8311.67it/s]
+[transformers] Model config: pad_token_id must be `None` or an integer within the vocabulary (between 0 and 31999), got 128002. This may result in unexpected behavior.
+Loading weights:   0%|          | 0/471 [00:00<?, ?it/s]Loading weights: 100%|██████████| 471/471 [00:00<00:00, 7107.53it/s]
+[transformers] The tied weights mapping and config for this model specifies to tie model.text_model.embed_tokens.weight to lm_head.weight, but both are present in the checkpoints with different values, so we will NOT tie them. You should update the config with `tie_word_embeddings=False` to silence this warning.
+docling-formulas: initialized in 5982.2 ms; error=None
+corpus-usrguide / docling-formulas: ok
+corpus-senate-expenditures / docling-formulas: ok
+2026-10-07 20:31:30,063 MatchingPostProcessor WARNING  952 of 1363 pdf cells matched neither a row nor a column band of the 2x2 grid and were dropped from the table
+2026-10-07 20:32:06,811 MatchingPostProcessor WARNING  952 of 1363 pdf cells matched neither a row nor a column band of the 2x2 grid and were dropped from the table
+2026-10-07 20:32:48,299 MatchingPostProcessor WARNING  952 of 1363 pdf cells matched neither a row nor a column band of the 2x2 grid and were dropped from the table
+2026-10-07 20:33:31,645 MatchingPostProcessor WARNING  952 of 1363 pdf cells matched neither a row nor a column band of the 2x2 grid and were dropped from the table
+corpus-nics-background-checks-2015-11 / docling-formulas: ok
+corpus-pdfium-type3 / docling-formulas: ok
+corpus-f1040 / docling-formulas: ok
+omml-equations / docling-formulas: ok
+marker-fast: initialized in 1060.1 ms; error=None
+text-structure-and-literals / marker-fast: ok
+positioned-math / marker-fast: ok
+math-actualtext / marker-fast: ok
+accessible-actualtext / marker-fast: ok
+two-column-order / marker-fast: ok
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/dan/code/oss/pylopdf/bench/model_features.py", line 241, in <module>
+    main()
+  File "/home/dan/code/oss/pylopdf/bench/model_features.py", line 231, in main
+    retain_artifacts(result, retained, leaf)
+  File "/home/dan/code/oss/pylopdf/bench/model_features.py", line 120, in retain_artifacts
+    structured.model_dump_json(indent=2) if result["adapter"] == "marker-fast" else structured.export_to_dict()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/pylopdf-model-bench/lib/python3.12/site-packages/pydantic/main.py", line 542, in model_dump_json
+    return self.__pydantic_serializer__.to_json(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pydantic_core._pydantic_core.PydanticSerializationError: Unable to serialize unknown type: <class 'PIL.Image.Image'>
+marker-fast: initialized in 8301.1 ms; error=None
+unicode-cmap-and-emoji / marker-fast: ok
+2026-10-07 20:34:32,381 [INFO] marker: Table processing stats: {'tables_pdftext': 1, 'tables_total': 1}
+2026-10-07 20:34:33,566 [INFO] marker: Table processing stats: {'tables_pdftext': 2, 'tables_total': 1}
+2026-10-07 20:34:34,841 [INFO] marker: Table processing stats: {'tables_pdftext': 3, 'tables_total': 1}
+2026-10-07 20:34:35,295 [INFO] marker: Table processing stats: {'tables_pdftext': 4, 'tables_total': 1}
+table-bordered / marker-fast: ok
+2026-10-07 20:34:35,646 [INFO] marker: Table processing stats: {'tables_pdftext': 5, 'tables_total': 1}
+2026-10-07 20:34:35,984 [INFO] marker: Table processing stats: {'tables_pdftext': 6, 'tables_total': 1}
+2026-10-07 20:34:36,339 [INFO] marker: Table processing stats: {'tables_pdftext': 7, 'tables_total': 1}
+2026-10-07 20:34:36,700 [INFO] marker: Table processing stats: {'tables_pdftext': 8, 'tables_total': 1}
+table-borderless / marker-fast: ok
+2026-10-07 20:34:37,071 [INFO] marker: Table processing stats: {'tables_pdftext': 9, 'tables_total': 1}
+2026-10-07 20:34:37,432 [INFO] marker: Table processing stats: {'tables_pdftext': 10, 'tables_total': 1}
+2026-10-07 20:34:37,849 [INFO] marker: Table processing stats: {'tables_pdftext': 11, 'tables_total': 1}
+2026-10-07 20:34:38,206 [INFO] marker: Table processing stats: {'tables_pdftext': 12, 'tables_total': 1}
+table-merged / marker-fast: ok
+links-and-outline / marker-fast: ok
+2026-10-07 20:34:41,117 [INFO] marker: Table processing stats: {'tables_pdftext': 12, 'tables_total': 1}
+2026-10-07 20:34:41,462 [INFO] marker: Table processing stats: {'tables_pdftext': 12, 'tables_total': 1}
+2026-10-07 20:34:41,810 [INFO] marker: Table processing stats: {'tables_pdftext': 12, 'tables_total': 1}
+2026-10-07 20:34:42,165 [INFO] marker: Table processing stats: {'tables_pdftext': 12, 'tables_total': 1}
+images-and-vectors / marker-fast: ok
+2026-10-07 20:34:42,523 [INFO] marker: Table processing stats: {'tables_pdftext': 12, 'tables_total': 1}
+2026-10-07 20:34:42,863 [INFO] marker: Table processing stats: {'tables_pdftext': 12, 'tables_total': 1}
+2026-10-07 20:34:43,205 [INFO] marker: Table processing stats: {'tables_pdftext': 12, 'tables_total': 1}
+2026-10-07 20:34:43,544 [INFO] marker: Table processing stats: {'tables_pdftext': 12, 'tables_total': 1}
+image-only / marker-fast: ok
+2026-10-07 20:34:43,917 [INFO] marker: Table processing stats: {'tables_pdftext': 13, 'tables_total': 1}
+2026-10-07 20:34:44,271 [INFO] marker: Table processing stats: {'tables_pdftext': 14, 'tables_total': 1}
+2026-10-07 20:34:44,590 [INFO] marker: Table processing stats: {'tables_pdftext': 15, 'tables_total': 1}
+2026-10-07 20:34:44,933 [INFO] marker: Table processing stats: {'tables_pdftext': 16, 'tables_total': 1}
+table-borderless-aligned / marker-fast: ok
+rotated-columns / marker-fast: ok
+footnotes-and-page-furniture / marker-fast: ok
+rtl-visual-glyph-order / marker-fast: ok
+tagged-reading-order / marker-fast: ok
+corpus-usrguide / marker-fast: ok
+2026-10-07 20:34:53,160 [INFO] marker: Table processing stats: {'tables_pdftext': 17, 'tables_total': 1}
+2026-10-07 20:34:54,159 [INFO] marker: Table processing stats: {'tables_pdftext': 18, 'tables_total': 1}
+2026-10-07 20:34:55,024 [INFO] marker: Table processing stats: {'tables_pdftext': 19, 'tables_total': 1}
+2026-10-07 20:34:55,820 [INFO] marker: Table processing stats: {'tables_pdftext': 20, 'tables_total': 1}
+corpus-senate-expenditures / marker-fast: ok
+2026-10-07 20:34:56,762 [INFO] marker: Table processing stats: {'tables_pdftext': 21, 'tables_total': 1}
+2026-10-07 20:34:57,675 [INFO] marker: Table processing stats: {'tables_pdftext': 22, 'tables_total': 1}
+2026-10-07 20:34:58,754 [INFO] marker: Table processing stats: {'tables_pdftext': 23, 'tables_total': 1}
+2026-10-07 20:34:59,651 [INFO] marker: Table processing stats: {'tables_pdftext': 24, 'tables_total': 1}
+corpus-nics-background-checks-2015-11 / marker-fast: ok
+corpus-pdfium-type3 / marker-fast: ok
+2026-10-07 20:35:01,411 [INFO] marker: Table processing stats: {'tables_pdftext': 25, 'tables_total': 1}
+2026-10-07 20:35:02,201 [INFO] marker: Table processing stats: {'tables_pdftext': 26, 'tables_total': 1}
+2026-10-07 20:35:02,850 [INFO] marker: Table processing stats: {'tables_pdftext': 27, 'tables_total': 1}
+2026-10-07 20:35:03,539 [INFO] marker: Table processing stats: {'tables_pdftext': 28, 'tables_total': 1}
+corpus-f1040 / marker-fast: ok
+omml-equations / marker-fast: ok

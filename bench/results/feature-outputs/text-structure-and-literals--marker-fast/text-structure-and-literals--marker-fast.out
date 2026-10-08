@@ -1,0 +1,14 @@
+## Section heading
+
+Ordinary paragraph with enough body text to establish a body font size.
+
+## **Bold phrase** Italic phrase
+
+code\_value = 42
+
+- 1. First item
+- 2. Second item
+
+- Nested bullet
+
+Literal \*asterisks\* [brackets] # hash <tag> \ backslash

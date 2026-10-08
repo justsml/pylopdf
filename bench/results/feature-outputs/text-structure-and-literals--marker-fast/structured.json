@@ -1,0 +1,95 @@
+{
+  "markdown": "## Section heading\n\nOrdinary paragraph with enough body text to establish a body font size.\n\n## **Bold phrase** Italic phrase\n\ncode\\_value = 42\n\n- 1. First item\n- 2. Second item\n\n- Nested bullet\n\nLiteral \\*asterisks\\* [brackets] # hash <tag> \\ backslash",
+  "images": {},
+  "metadata": {
+    "table_of_contents": [
+      {
+        "title": "Section heading",
+        "heading_level": null,
+        "page_id": 0,
+        "polygon": [
+          [
+            37.33733654022217,
+            29.25358772277832
+          ],
+          [
+            213.28115844726562,
+            29.25358772277832
+          ],
+          [
+            213.28115844726562,
+            57.3759765625
+          ],
+          [
+            37.33733654022217,
+            57.3759765625
+          ]
+        ]
+      },
+      {
+        "title": "Bold phrase Italic phrase",
+        "heading_level": null,
+        "page_id": 0,
+        "polygon": [
+          [
+            36.440279960632324,
+            119.09604263305664
+          ],
+          [
+            264.95599365234375,
+            119.09604263305664
+          ],
+          [
+            264.95599365234375,
+            134.7239990234375
+          ],
+          [
+            36.440279960632324,
+            134.7239990234375
+          ]
+        ]
+      }
+    ],
+    "page_stats": [
+      {
+        "page_id": 0,
+        "text_extraction_method": "pdftext",
+        "block_counts": [
+          [
+            "Span",
+            17
+          ],
+          [
+            "Line",
+            8
+          ],
+          [
+            "Text",
+            5
+          ],
+          [
+            "SectionHeader",
+            2
+          ],
+          [
+            "ListItem",
+            2
+          ],
+          [
+            "ListGroup",
+            1
+          ]
+        ],
+        "block_metadata": {
+          "llm_request_count": 0,
+          "llm_error_count": 0,
+          "llm_tokens_used": 0,
+          "previous_text": "",
+          "previous_type": "",
+          "previous_order": 0
+        }
+      }
+    ],
+    "debug_data_path": "debug_data/tmppjnybt5s"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "markdown": "Body reference<sup>1</sup>\n\nBody paragraph continues here.\n\n<sup>1</sup> Footnote content",
+  "metadata": {
+    "table_of_contents": [
+      {
+        "title": "",
+        "heading_level": null,
+        "page_id": 0,
+        "polygon": [
+          [
+            36.300790786743164,
+            75.87027168273926
+          ],
+          [
+            126.0574836730957,
+            75.87027168273926
+          ],
+          [
+            126.0574836730957,
+            95.65564155578613
+          ],
+          [
+            36.300790786743164,
+            95.65564155578613
+          ]
+        ]
+      }
+    ],
+    "page_stats": [
+      {
+        "page_id": 0,
+        "text_extraction_method": "pdftext",
+        "block_counts": [
+          [
+            "Span",
+            10
+          ],
+          [
+            "Line",
+            5
+          ],
+          [
+            "Text",
+            2
+          ],
+          [
+            "PageHeader",
+            1
+          ],
+          [
+            "SectionHeader",
+            1
+          ],
+          [
+            "Footnote",
+            1
+          ],
+          [
+            "PageFooter",
+            1
+          ]
+        ],
+        "block_metadata": {
+          "llm_request_count": 0,
+          "llm_error_count": 0,
+          "llm_tokens_used": 0,
+          "previous_text": "",
+          "previous_type": "",
+          "previous_order": 0
+        }
+      }
+    ],
+    "debug_data_path": "debug_data/tmpiug4yppj"
+  }
+}

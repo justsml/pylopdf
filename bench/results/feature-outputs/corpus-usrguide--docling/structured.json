@@ -1,0 +1,562 @@
+{
+  "schema_name": "DoclingDocument",
+  "version": "1.10.0",
+  "name": "fixture",
+  "origin": {
+    "mimetype": "application/pdf",
+    "binary_hash": 6437483980347338897,
+    "filename": "fixture.pdf"
+  },
+  "furniture": {
+    "self_ref": "#/furniture",
+    "children": [],
+    "content_layer": "furniture",
+    "name": "_root_",
+    "label": "unspecified"
+  },
+  "body": {
+    "self_ref": "#/body",
+    "children": [
+      {
+        "$ref": "#/texts/0"
+      },
+      {
+        "$ref": "#/texts/1"
+      },
+      {
+        "$ref": "#/texts/2"
+      },
+      {
+        "$ref": "#/texts/3"
+      },
+      {
+        "$ref": "#/texts/4"
+      },
+      {
+        "$ref": "#/groups/0"
+      },
+      {
+        "$ref": "#/texts/8"
+      },
+      {
+        "$ref": "#/texts/9"
+      },
+      {
+        "$ref": "#/texts/10"
+      },
+      {
+        "$ref": "#/texts/11"
+      },
+      {
+        "$ref": "#/texts/12"
+      },
+      {
+        "$ref": "#/texts/13"
+      },
+      {
+        "$ref": "#/texts/14"
+      },
+      {
+        "$ref": "#/texts/15"
+      }
+    ],
+    "content_layer": "body",
+    "name": "_root_",
+    "label": "unspecified"
+  },
+  "groups": [
+    {
+      "self_ref": "#/groups/0",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [
+        {
+          "$ref": "#/texts/5"
+        },
+        {
+          "$ref": "#/texts/6"
+        },
+        {
+          "$ref": "#/texts/7"
+        }
+      ],
+      "content_layer": "body",
+      "name": "list",
+      "label": "list"
+    }
+  ],
+  "texts": [
+    {
+      "self_ref": "#/texts/0",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 124.802,
+            "t": 713.1625956,
+            "r": 286.46511019999997,
+            "b": 704.086667,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            36
+          ]
+        }
+      ],
+      "orig": "which produces the following output:",
+      "text": "which produces the following output:"
+    },
+    {
+      "self_ref": "#/texts/1",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "code",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 149.709,
+            "t": 688.7811054,
+            "r": 443.60874765999955,
+            "b": 674.4185267325648,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            66
+          ]
+        }
+      ],
+      "orig": "LATEX can now compute: sin(3.5) 2 +2 · 10-3 = -0.1733916138448099.",
+      "text": "LATEX can now compute: sin(3.5) 2 +2 · 10-3 = -0.1733916138448099.",
+      "captions": [],
+      "references": [],
+      "footnotes": [],
+      "code_language": "unknown"
+    },
+    {
+      "self_ref": "#/texts/2",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "code",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 105.873,
+            "t": 655.4938496,
+            "r": 235.3917513599999,
+            "b": 647.3254592000001,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            31
+          ]
+        }
+      ],
+      "orig": "\\inteval {⟨integer expression⟩}",
+      "text": "\\inteval {⟨integer expression⟩}",
+      "captions": [],
+      "references": [],
+      "footnotes": [],
+      "code_language": "unknown"
+    },
+    {
+      "self_ref": "#/texts/3",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 124.802,
+            "t": 635.3580069999999,
+            "r": 468.51170000000013,
+            "b": 568.5484113999997,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            391
+          ]
+        }
+      ],
+      "orig": "The expandable command \\inteval takes as its argument an integer expression and produces a result using the normal rules of mathematics with some restrictions, see below. The operations recognized are +, -, * and / plus parentheses. As this command is expandable it can be used where TEX requires a number and for example within a low-level \\edef operation to give a purely numerical result.",
+      "text": "The expandable command \\inteval takes as its argument an integer expression and produces a result using the normal rules of mathematics with some restrictions, see below. The operations recognized are +, -, * and / plus parentheses. As this command is expandable it can be used where TEX requires a number and for example within a low-level \\edef operation to give a purely numerical result."
+    },
+    {
+      "self_ref": "#/texts/4",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 124.80200000000005,
+            "t": 557.7595955999998,
+            "r": 468.5176775600001,
+            "b": 536.7386295999997,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            122
+          ]
+        }
+      ],
+      "orig": "This is basically a thin wrapper for the primitive \\numexpr command and therefore has some syntax restrictions. These are:",
+      "text": "This is basically a thin wrapper for the primitive \\numexpr command and therefore has some syntax restrictions. These are:"
+    },
+    {
+      "self_ref": "#/texts/5",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 139.74700000000004,
+            "t": 519.7920069999997,
+            "r": 468.5137962600001,
+            "b": 499.0001807999997,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            85
+          ]
+        }
+      ],
+      "orig": "· / denotes division rounded to the closest integer with ties rounded away from zero;",
+      "text": "/ denotes division rounded to the closest integer with ties rounded away from zero;",
+      "enumerated": false,
+      "marker": "·"
+    },
+    {
+      "self_ref": "#/texts/6",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 139.74700000000004,
+            "t": 487.91100699999976,
+            "r": 468.5137962600002,
+            "b": 454.86530279999977,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            224
+          ]
+        }
+      ],
+      "orig": "· there is an error and the overall expression evaluates to zero whenever the absolute value of any intermediate result exceeds 231 - 1, except in the case of scaling operations a*b/c, for which a*b may be arbitrarily large;",
+      "text": "there is an error and the overall expression evaluates to zero whenever the absolute value of any intermediate result exceeds 231 - 1, except in the case of scaling operations a*b/c, for which a*b may be arbitrarily large;",
+      "enumerated": false,
+      "marker": "·"
+    },
+    {
+      "self_ref": "#/texts/7",
+      "parent": {
+        "$ref": "#/groups/0"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "list_item",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 139.74700000000004,
+            "t": 444.1855955999998,
+            "r": 468.5108074799999,
+            "b": 422.98430279999974,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            146
+          ]
+        }
+      ],
+      "orig": "· parentheses may not appear after unary + or -, namely placing +( or -( at the start of an expression or after +, -, *, / or ( leads to an error.",
+      "text": "parentheses may not appear after unary + or -, namely placing +( or -( at the start of an expression or after +, -, *, / or ( leads to an error.",
+      "enumerated": false,
+      "marker": "·"
+    },
+    {
+      "self_ref": "#/texts/8",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 124.80200000000004,
+            "t": 406.43718419999976,
+            "r": 307.45929718000014,
+            "b": 397.25166699999977,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            41
+          ]
+        }
+      ],
+      "orig": "An example of use could be the following.",
+      "text": "An example of use could be the following."
+    },
+    {
+      "self_ref": "#/texts/9",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "code",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 138.92100000000005,
+            "t": 377.87247039999977,
+            "r": 487.17597599999914,
+            "b": 370.40345919999976,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            74
+          ]
+        }
+      ],
+      "orig": "\\LaTeX{} can now compute: The sum of the numbers is $\\inteval{1 + 2 + 3}$.",
+      "text": "\\LaTeX{} can now compute: The sum of the numbers is $\\inteval{1 + 2 + 3}$.",
+      "captions": [],
+      "references": [],
+      "footnotes": [],
+      "code_language": "unknown"
+    },
+    {
+      "self_ref": "#/texts/10",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 124.80200000000005,
+            "t": 351.5325955999998,
+            "r": 444.2488063,
+            "b": 342.3649625999998,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            71
+          ]
+        }
+      ],
+      "orig": "which results in \"LATEX can now compute: The sum of the numbers is 6. \"",
+      "text": "which results in \"LATEX can now compute: The sum of the numbers is 6. \""
+    },
+    {
+      "self_ref": "#/texts/11",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "code",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 105.873,
+            "t": 322.39984960000004,
+            "r": 376.76408351999964,
+            "b": 314.2314591999999,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            59
+          ]
+        }
+      ],
+      "orig": "\\dimeval {⟨dimen expression⟩} \\skipeval {⟨skip expression⟩}",
+      "text": "\\dimeval {⟨dimen expression⟩} \\skipeval {⟨skip expression⟩}",
+      "captions": [],
+      "references": [],
+      "footnotes": [],
+      "code_language": "unknown"
+    },
+    {
+      "self_ref": "#/texts/12",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 124.802,
+            "t": 302.8219126,
+            "r": 468.51668129999996,
+            "b": 257.44162960000006,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            306
+          ]
+        }
+      ],
+      "orig": "Similar to \\inteval but computing a length (dimen) or a rubber length (skip) value. Both are thin wrappers around the corresponding engine primitives, which makes them fast, but therefore shows the same syntax peculiars as discussed above. Nevertheless, in practice they are usually sufficient. For example",
+      "text": "Similar to \\inteval but computing a length (dimen) or a rubber length (skip) value. Both are thin wrappers around the corresponding engine primitives, which makes them fast, but therefore shows the same syntax peculiars as discussed above. Nevertheless, in practice they are usually sufficient. For example"
+    },
+    {
+      "self_ref": "#/texts/13",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "code",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 138.921,
+            "t": 238.05347040000004,
+            "r": 482.47396575999903,
+            "b": 219.62545920000002,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            112
+          ]
+        }
+      ],
+      "orig": "\\NewDocumentCommand\\calculateheight{m}{% \\setlength\\textheight{\\dimeval{\\topskip+\\baselineskip*\\inteval{#1-1}}}}",
+      "text": "\\NewDocumentCommand\\calculateheight{m}{% \\setlength\\textheight{\\dimeval{\\topskip+\\baselineskip*\\inteval{#1-1}}}}",
+      "captions": [],
+      "references": [],
+      "footnotes": [],
+      "code_language": "unknown"
+    },
+    {
+      "self_ref": "#/texts/14",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "body",
+      "label": "text",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 124.80199999999999,
+            "t": 200.75459560000002,
+            "r": 468.5146887799997,
+            "b": 157.74541139999997,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            241
+          ]
+        }
+      ],
+      "orig": "sets the \\textheight to the appropriate value if a page should hold a specific number of text lines. Thus after \\calculateheight{40} it is set to 478.0pt, given the values \\topskip (10.0pt) and \\baselineskip (12.0pt) in the current document.",
+      "text": "sets the \\textheight to the appropriate value if a page should hold a specific number of text lines. Thus after \\calculateheight{40} it is set to 478.0pt, given the values \\topskip (10.0pt) and \\baselineskip (12.0pt) in the current document."
+    },
+    {
+      "self_ref": "#/texts/15",
+      "parent": {
+        "$ref": "#/body"
+      },
+      "children": [],
+      "content_layer": "furniture",
+      "label": "page_footer",
+      "prov": [
+        {
+          "page_no": 1,
+          "bbox": {
+            "l": 291.677,
+            "t": 97.09301679999999,
+            "r": 301.63760748000004,
+            "b": 90.22878539999999,
+            "coord_origin": "BOTTOMLEFT"
+          },
+          "charspan": [
+            0,
+            2
+          ]
+        }
+      ],
+      "orig": "23",
+      "text": "23"
+    }
+  ],
+  "pictures": [],
+  "tables": [],
+  "key_value_items": [],
+  "form_items": [],
+  "pages": {
+    "1": {
+      "size": {
+        "width": 595.276,
+        "height": 841.89
+      },
+      "page_no": 1
+    }
+  }
+}

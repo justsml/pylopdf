@@ -1,0 +1,43 @@
+{
+  "markdown": "| OBLIGATION/SERVICE DESCRIPTION DOCUMENT NO AMOUNT DATE PAYEE NAME DATES POSTED START END | (\\$) |\n|------------------------------------------------------------------------------------------|------|\n| BAIN ,                                                                                   |      |\n| 37 ,499                                                                                  | .96  |\n| SMITH ,                                                                                  |      |\n| 21 ,000                                                                                  | .00  |\n| 12 ,111                                                                                  | .06  |\n| 25 ,499                                                                                  | .96  |\n| 31 ,111                                                                                  | .08  |\n| VELEZ-GREEN ,                                                                            |      |\n| 26 ,874                                                                                  | .99  |\n| 446                                                                                      | .87  |\n| KISHI ,                                                                                  |      |\n| 11 ,188                                                                                  | .87  |\n| 1 ,260                                                                                   | .00  |\n| 1 ,458                                                                                   | .33  |\n| 920                                                                                      | .68  |\n| 907                                                                                      | .96  |\n| 737                                                                                      | .94  |\n| 903                                                                                      | .90  |\n| LOUIS ,                                                                                  |      |\n| 798                                                                                      | .90  |\n| 521                                                                                      | .00  |\n| 349                                                                                      | .60  |\n| 477                                                                                      | .60  |\n| 618                                                                                      | .00  |\n| 553                                                                                      | .30  |\n| MO ,                                                                                     |      |\n| 601                                                                                      | .30  |\n| SPRINGFIELD ,                                                                            |      |\n| 601                                                                                      | .30  |\n| SPRINGFIELD ,                                                                            |      |\n| 304                                                                                      | .30  |\n| 697                                                                                      | .00  |\n| MO ,                                                                                     |      |\n| 1 ,112                                                                                   | .00  |\n| 728                                                                                      | .30  |\n| 463                                                                                      | .30  |\n| LOUIS ,                                                                                  |      |\n| 70                                                                                       | .00  |\n| 685                                                                                      | .01  |\n| 411                                                                                      | .49  |\n| 411                                                                                      | .49  |\n| 411                                                                                      | .49  |",
+  "metadata": {
+    "table_of_contents": [],
+    "page_stats": [
+      {
+        "page_id": 0,
+        "text_extraction_method": "pdftext",
+        "block_counts": [
+          [
+            "Line",
+            479
+          ],
+          [
+            "Span",
+            479
+          ],
+          [
+            "Table",
+            1
+          ],
+          [
+            "PageFooter",
+            1
+          ],
+          [
+            "PageHeader",
+            1
+          ]
+        ],
+        "block_metadata": {
+          "llm_request_count": 0,
+          "llm_error_count": 0,
+          "llm_tokens_used": 0,
+          "previous_text": "",
+          "previous_type": "",
+          "previous_order": 0
+        }
+      }
+    ],
+    "debug_data_path": "debug_data/tmp7uvpknjt"
+  }
+}
