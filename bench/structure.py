@@ -651,9 +651,11 @@ def format_report(report: dict[str, Any]) -> str:
         "Timing covers the adapter after preparation, excluding fixture extraction/rendering; prepared baselines",
         "are replayed, so their timing is not a conversion measurement. Process RSS is cumulative high-water RSS.",
         "Model repetitions include the first inference; initialization is reported separately. No throughput claims.",
+        "CUDA figures are observed peak allocated bytes for retained generation calls, not reserved VRAM.",
+        "The provenance device is the requested backend; native geometry/OCR and replay/repair adapters use CPU.",
         "",
-        "| Case | Adapter | Exact grid | Cells | Relations recalled | Record cells | Seconds | Result |",
-        "| --- | --- | --- | --- | --- | --- | ---: | --- |",
+        "| Case | Adapter | Exact grid | Cells | Relations recalled | Record cells | Seconds | CUDA GiB | Result |",
+        "| --- | --- | --- | --- | --- | --- | ---: | ---: | --- |",
     ]
     for result in report["results"]:
         score = result.get("score", {})
@@ -668,9 +670,18 @@ def format_report(report: dict[str, Any]) -> str:
         record_cells = f"{records['correct']}/{records['total']}" if records.get("total") else "—"
         status = result.get("error", "truncated" if result.get("output", {}).get("truncated") else "ok")
         status = status.replace("\n", " ").replace("|", "\\|")[:140]
+        details = result.get("output", {})
+        generations = [details, *details.get("crop_details", []), *result.get("failed_generations", [])]
+        peaks = [
+            generation["peak_cuda_allocated_bytes"]
+            for generation in generations
+            if "peak_cuda_allocated_bytes" in generation
+        ]
+        peak = f"{max(peaks) / 2**30:.2f}" if peaks else "—"
+        seconds = result.get("median_seconds", result.get("elapsed_seconds", 0))
         lines.append(
             f"| {result['case']} | {result['adapter']} | {exact} | {cells} | {relations} | "
-            f"{record_cells} | {result.get('median_seconds', 0):.3f} | {status} |"
+            f"{record_cells} | {seconds:.3f} | {peak} | {status} |"
         )
     provenance = {key: value for key, value in report["metadata"].items() if key != "runs"}
     lines.extend(

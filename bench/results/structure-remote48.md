@@ -10,21 +10,23 @@ Geometry bullet results score their underlying recovered cells, not reparsed bul
 Timing covers the adapter after preparation, excluding fixture extraction/rendering; prepared baselines
 are replayed, so their timing is not a conversion measurement. Process RSS is cumulative high-water RSS.
 Model repetitions include the first inference; initialization is reported separately. No throughput claims.
+CUDA figures are observed peak allocated bytes for retained generation calls, not reserved VRAM.
+The provenance device is the requested backend; native geometry/OCR and replay/repair adapters use CPU.
 
-| Case | Adapter | Exact grid | Cells | Relations recalled | Record cells | Seconds | Result |
-| --- | --- | --- | --- | --- | --- | ---: | --- |
-| corpus-senate-expenditures | olmocr-text | unscored | — | — | 0/23 | 83.105 | ok |
-| corpus-nics-background-checks-2015-11 | olmocr-text | unscored | — | — | 0/12 | 264.915 | truncated |
-| corpus-f1040 | olmocr-text | unscored | — | — | — | 32.111 | ok |
-| corpus-senate-expenditures | olmocr-compact-text | unscored | — | — | 0/23 | 32.784 | ok |
-| corpus-nics-background-checks-2015-11 | olmocr-compact-text | unscored | — | — | 0/12 | 17.271 | ok |
-| corpus-f1040 | olmocr-compact-text | unscored | — | — | — | 15.851 | ok |
-| corpus-senate-expenditures | qwen-text | unscored | — | — | 0/23 | 244.615 | truncated |
-| corpus-nics-background-checks-2015-11 | qwen-text | unscored | — | — | 0/12 | 29.381 | ok |
-| corpus-f1040 | qwen-text | unscored | — | — | — | 19.673 | ok |
-| corpus-senate-expenditures | repair-qwen-text | unscored | — | — | 0/23 | 0.033 | ok |
-| corpus-nics-background-checks-2015-11 | repair-qwen-text | unscored | — | — | 0/12 | 0.001 | ok |
-| corpus-f1040 | repair-qwen-text | unscored | — | — | — | 0.001 | ok |
+| Case | Adapter | Exact grid | Cells | Relations recalled | Record cells | Seconds | CUDA GiB | Result |
+| --- | --- | --- | --- | --- | --- | ---: | ---: | --- |
+| corpus-senate-expenditures | olmocr-text | unscored | — | — | 0/23 | 83.105 | 27.49 | ok |
+| corpus-nics-background-checks-2015-11 | olmocr-text | unscored | — | — | 0/12 | 264.915 | 37.19 | truncated |
+| corpus-f1040 | olmocr-text | unscored | — | — | — | 32.111 | 31.65 | ok |
+| corpus-senate-expenditures | olmocr-compact-text | unscored | — | — | 0/23 | 32.784 | 20.05 | ok |
+| corpus-nics-background-checks-2015-11 | olmocr-compact-text | unscored | — | — | 0/12 | 17.271 | 25.36 | ok |
+| corpus-f1040 | olmocr-compact-text | unscored | — | — | — | 15.851 | 22.72 | ok |
+| corpus-senate-expenditures | qwen-text | unscored | — | — | 0/23 | 244.615 | 14.24 | truncated |
+| corpus-nics-background-checks-2015-11 | qwen-text | unscored | — | — | 0/12 | 29.381 | 20.06 | ok |
+| corpus-f1040 | qwen-text | unscored | — | — | — | 19.673 | 16.73 | ok |
+| corpus-senate-expenditures | repair-qwen-text | unscored | — | — | 0/23 | 0.033 | — | ok |
+| corpus-nics-background-checks-2015-11 | repair-qwen-text | unscored | — | — | 0/12 | 0.001 | — | ok |
+| corpus-f1040 | repair-qwen-text | unscored | — | — | — | 0.001 | — | ok |
 
 ## Run provenance
 
