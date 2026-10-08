@@ -128,6 +128,7 @@ class _HtmlObservations(HTMLParser):
         self.subscripts = 0
         self.spans: list[dict[str, str]] = []
         self.text: list[str] = []
+        self.anchors: list[str] = []
 
     def handle_data(self, data: str) -> None:
         """Retain text inside HTML tables for the same literal-content probes."""
@@ -138,6 +139,7 @@ class _HtmlObservations(HTMLParser):
         self.tables += tag == "table"
         self.superscripts += tag == "sup"
         self.subscripts += tag == "sub"
+        self.anchors.extend(value for name, value in attrs if name == "id" and value)
         if tag in {"td", "th"}:
             span = {name: value for name, value in attrs if name in {"rowspan", "colspan"} and value is not None}
             if span:
@@ -180,6 +182,10 @@ def inspect_output(output: str, kind: str, case: FeatureCase) -> dict[str, Any]:
                 "html_superscripts": html.superscripts,
                 "html_subscripts": html.subscripts,
                 "html_table_spans": html.spans,
+                "html_anchors": html.anchors,
+                "internal_link_targets": {
+                    href: href[1:] in html.anchors for href in syntax["links"] if href and href.startswith("#")
+                },
             }
         )
         plain_parts = []
@@ -283,8 +289,7 @@ def format_report(report: dict[str, Any], output_dir: str) -> str:
     for index, run in enumerate(report.get("additional_runs", [])):
         versions = run["Versions"]
         selected_versions = ", ".join(
-            f"{name} {versions.get(name, 'not installed')}"
-            for name in ("docling", "marker-pdf", "surya-ocr", "torch")
+            f"{name} {versions.get(name, 'not installed')}" for name in ("docling", "marker-pdf", "surya-ocr", "torch")
         )
         lines.extend(
             [

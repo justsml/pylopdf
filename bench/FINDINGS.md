@@ -28,3 +28,31 @@ Automatic probes are useful for catching differences, while table geometry,
 formula equivalence, internal-link resolution, and image placement still need
 source-aware review. The [performance baseline](results/layout-latest.md)
 provides before/after timings with exact-output guards for future optimizations.
+
+## Docling and Marker on the same inputs
+
+The [combined report](results/features-models.md) adds 69 measurements: Docling
+2.135.0 with formula enrichment off/on and Marker 2.0.0 in CPU fast mode with
+OCR disabled. Together the studies cover seven libraries, 12 configurations,
+and 276 case/configuration measurements. All Markdown outputs repeated exactly
+over warmup and three measured conversions. This is repeatability, not proof
+of content preservation. Original timings and resumed runs retain separate
+provenance; structured artifacts were serialized outside the timer.
+
+| Feature | What these configured runs show | Evidence |
+|---|---|---|
+| Internal destinations | Marker preserves the external URI and both internal links. Their emitted `#page-1-0` target exists as an explicit span ID beside the second page's destination heading. Docling omits these link annotations from Markdown. | [Marker link output](results/feature-outputs/links-and-outline--marker-fast/links-and-outline--marker-fast.out) |
+| Unicode and invisible text | Docling retains three of four strict Unicode-CMap probes but loses the emoji sequence's ZWJ. Marker emits an image rather than any of the four text probes on this invisible-text fixture; that does not establish its behavior on all visible Unicode text. | [Unicode case](results/features-models.md#unicode-cmap-and-emoji) |
+| Merged cells and literal pipes | Docling retains all five literal probes but collapses the three physical columns into two, combining body cells; its structured tree reports no merged span. Marker keeps three pipe-table columns but replaces the literal pipe inside one cell with a space. | [Merged table](results/features-models.md#table-merged) |
+| Dense real-world table | Docling's pipeline logs that 952 of 1,363 PDF cells were dropped from an inferred 2×2 grid; its final structured table collapses to one cell. Conversion still returns successfully. The complete pipeline log is retained so that success cannot be confused with complete extraction. | [Dense table](results/features-models.md#corpus-nics-background-checks-2015-11), [console log](results/features-models.log) |
+| Formula enrichment and OMML export | Enabling Docling's formula enrichment changes none of the 23 Markdown outputs. The positioned fraction is an embedded image, with a formula item nested inside its picture in the structured tree; the Office equation remains flattened text. Marker's OCR-off mode also disables equation recognition and produces empty Markdown on this Office export. These results do not test Marker with equation OCR enabled or establish a general limit on either library's formula models. | [Positioned math](results/features-models.md#positioned-math), [Office case](results/features-models.md#omml-equations) |
+| ActualText math hint | Both added libraries retain the literal LaTeX already supplied in ActualText. Retaining the source hint is different from reconstructing fraction structure from painted glyphs. | [ActualText math](results/features-models.md#math-actualtext) |
+| Column and RTL policy | Docling interprets the two-column prose as a table and misses its supplied reference order, but retains all three RTL probes. Marker misses the column reference and emits an image rather than the invisible RTL strings. | [Columns](results/features-models.md#two-column-order), [RTL](results/features-models.md#rtl-visual-glyph-order) |
+
+Marker's image references have four real JPEG assets saved beside the Markdown.
+Docling embeds picture payloads in its output. Marker sidecars contain its
+Markdown renderer output and metadata, while Docling sidecars contain its
+native document tree; they are not interchangeable structured schemas.
+The log also retains the interrupted run and the benchmark's corrected PIL
+artifact-serialization error. Successful rows were preserved and remaining
+rows resumed; no failed or interrupted timing was silently presented as a win.

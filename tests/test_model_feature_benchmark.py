@@ -8,6 +8,7 @@ from typing import Any
 
 import pytest
 from bench.feature_cases import FeatureCase
+from bench.features import inspect_output
 from bench.model_features import conversion_call, retain_artifacts, validate_inputs
 
 
@@ -37,3 +38,12 @@ def test_model_artifacts_keep_warmup_images_and_structure(tmp_path: Path, monkey
     assert json.loads((tmp_path / "structured.json").read_text()) == {"page": 1}
     assert result["image_assets"][0]["sha256"] == hashlib.sha256(b"image payload").hexdigest()
     assert (tmp_path / "figure.png").read_bytes() == b"image payload"
+
+
+def test_explicit_internal_link_requires_a_real_anchor() -> None:
+    case = FeatureCase("fixture", b"PDF", (), "", ())
+    output = '[next](#page-1-0) [missing](#absent)\n\n<span id="page-1-0"></span>Destination'
+    pytest.importorskip("markdown_it")
+    pytest.importorskip("mdit_py_plugins")
+    syntax = inspect_output(output, "markdown", case)["syntax"]
+    assert syntax["internal_link_targets"] == {"#page-1-0": True, "#absent": False}
