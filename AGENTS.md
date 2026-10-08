@@ -13,6 +13,9 @@ overview.
 
 ## Working conventions
 
+- Development pull requests for this fork target `justsml/pylopdf`. Push work
+  branches to the `fork` remote. Do not open or update upstream pull requests
+  unless the user explicitly requests it.
 - Open a short-lived branch and pull request for each coherent unit of work.
   `main` is protected: direct pushes are rejected, and merging requires the six
   required status checks. Squash-merge so one merged pull request becomes one
@@ -22,6 +25,8 @@ overview.
 - Non-English text is allowed only in localized documentation and data required
   to test Unicode or CJK behavior.
 - Do not place experiments unrelated to PDF processing in this repository.
+- Do not run benchmark inference or training on the local GPU. Use a remote GPU
+  within the user's authorized spending cap; local checks must remain CPU-only.
 
 ## Development commands
 
