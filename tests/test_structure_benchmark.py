@@ -64,6 +64,8 @@ def test_neutral_header_fallback_keeps_displaced_source_words(
     monkeypatch: pytest.MonkeyPatch,
     adapter: str,
 ) -> None:
+    if adapter == "hybrid-bullets":
+        pytest.importorskip("markdown_it")
     header = "Unresolved heading Handgun Handgun " + "multiple grouped field labels " * 5
     content = "\n".join(
         [
