@@ -233,6 +233,24 @@ with strict and NFKC character error rates on licensed Japanese fixtures.
 uv sync --all-extras --group bench && uv run python bench/run.py
 ```
 
+Measure end-to-end Markdown and `words` / `blocks` / `dict` extraction separately:
+
+```bash
+uv sync && uv run python bench/layout.py
+# Save a baseline before optimizing, then compare the candidate checkout:
+uv run python bench/layout.py --output /tmp/layout-baseline.json
+uv run python bench/layout.py --baseline /tmp/layout-baseline.json
+```
+
+The runner writes `bench/results/layout-latest.md` and a JSON sidecar. It uses
+four existing corpus PDFs and synthetic ASCII / Unicode OCR-text documents with
+tables at 1, 8, and 16 pages. Fresh-document timings include opening and closing;
+reused-document timings repeat each task after warmup. Complete output hashes
+must match before reporting a baseline speedup. Use the same environment and
+repetition count for both runs. `--synthetic-only` runs without the corpus, and
+`--repetitions` defaults to five. Fixture generation and output hashing are
+outside the timed region.
+
 ## Architecture
 
 ```
