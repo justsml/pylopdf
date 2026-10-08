@@ -56,19 +56,29 @@ def source_words() -> list[dict[str, Any]]:
     return [{"id": "a", "text": "Heading"}, {"id": "b", "text": "42.00"}]
 
 
-def test_failed_patch_retains_generation_metadata(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+    ("raw", "truncated", "error"), [('{"tables":[]}', True, ValueError), ("{invalid", False, json.JSONDecodeError)]
+)
+def test_failed_patch_retains_generation_metadata(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    raw: str,
+    *,
+    truncated: bool,
+    error: type[Exception],
+) -> None:
     image = pytest.importorskip("PIL.Image")
     directory = tmp_path / "sample"
     directory.mkdir()
     image.new("RGB", (20, 20), "white").save(directory / "page.png")
     monkeypatch.setattr(structure, "ARTIFACTS", tmp_path)
     engine = MagicMock(adapter="qwen-patch")
-    engine.generate.return_value = ("{invalid", {"truncated": True, "output_tokens": 4096})
+    engine.generate.return_value = (raw, {"truncated": truncated, "output_tokens": 4096})
     bundle = {"name": "sample", "words": [], "width": 20, "height": 20}
-    with pytest.raises(json.JSONDecodeError):
+    with pytest.raises(error):
         structure.run_adapter(bundle, engine, 4096)
     assert json.loads((directory / "qwen-patch-generation.json").read_text()) == {
-        "truncated": True,
+        "truncated": truncated,
         "output_tokens": 4096,
     }
 

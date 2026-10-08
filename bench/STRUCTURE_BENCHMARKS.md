@@ -210,6 +210,29 @@ extension requires a newer glibc than the rental host. Native extraction/renderi
 timings from that worker are not claimed. Model inference and prepared inputs
 remain matched. Preserve remote logs/results before destroying the instance.
 
+On the prepared remote worker, reproduce the memory and output controls with:
+
+```bash
+PYTHONPATH=. /workspace/study-env/bin/python -m bench.structure \
+  --adapter olmocr-text --adapter olmocr-compact-text --adapter qwen-text \
+  --case corpus-senate-expenditures \
+  --case corpus-nics-background-checks-2015-11 --case corpus-f1040 \
+  --report bench/results/structure-remote48.json
+PYTHONPATH=. /workspace/study-env/bin/python -m bench.structure \
+  --adapter olmocr-image --max-tokens 16384 \
+  --case corpus-senate-expenditures \
+  --case corpus-nics-background-checks-2015-11 \
+  --report bench/results/structure-remote48-long.json
+```
+
+The remaining compact patch, NF4 base/LoRA, and NF4 row-patch cohorts use
+`structure-remote-patches.json` on the same worker. The matched base and adapter
+cohort contains the nine positive fixtures, six negative controls, and Senate/NICS;
+the row-patch cohort contains Senate/NICS. All use the original frozen screenshots
+and compact source words, greedy decoding, and 4,096 output tokens. The interrupted
+local compact-patch cohort is retained as partial history, not a matched training
+comparison. Remote weight hashes are retained independently of local cache hashes.
+
 The user authorized $15 total remote spend, including rental and API inference.
 The rental has a two-hour destruction watchdog and must also be destroyed after
 artifact collection. Record provider charges or explicitly labeled estimates

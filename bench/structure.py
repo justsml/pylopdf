@@ -424,6 +424,9 @@ def run_adapter(bundle: dict[str, Any], engine: Engines, limit: int) -> dict[str
     write_json(directory / f"{name}-generation.json", details)
     (directory / f"{name}-raw.txt").write_text(raw)
     if name.endswith("patch"):
+        if details["truncated"]:
+            msg = "patch exhausted its output token boundary"
+            raise ValueError(msg)
         cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
         payload = json.loads(cleaned)
         matrices, consumed = validate_patch(payload, words)
