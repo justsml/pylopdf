@@ -216,9 +216,39 @@ header、修复xref stream或回退到旧revision。修复会发出`PylopdfWarni
   native与Pyodide CI共享同一hostile-input回归契约；定期Atheris fuzzing使用
   损坏xref、循环、深层对象、broken stream和压缩bomb作为seed。
 
+## 检查阶段与服务边界
+
+普通`open()`在未传入策略时，`DocumentLimits`字段默认无限制。web预设需要显式选择，
+它不是进程沙箱。
+
+- 解析前检查文件字节数和密码字节数。
+- 解析时向lopdf提供解码流上限，但不限制所有解析器分配或进程RSS。
+- 解析后、返回前检查对象数、直接对象深度、页数以及累计和页内容解压量。拒绝前可能已发生大量分配和CPU工作。
+- 解释与输出阶段检查snapshot、glyph/text和支持的writer预算。SVG内部字符串等上游结果只能在生成完成后检查。
+
+策略拒绝使用带稳定code的`LimitError`；某些固定实现上限和分配失败使用`PdfError`。
+在任务边界捕获`PdfError`，需要分类策略拒绝时读取`LimitError.code`。
+
+编码输出预算、像素上限、cache条目数和`render_pages()`的worker估算都不是整个进程的
+内存上限。解析图、snapshot、cache、字体、解码器、完成输出和Python对象会共存。
+OCR准入按engine生效，多个engine会增加推理buffer。clip仍生成整页raster；OCR clip只缩小
+检测器输入。测量实际峰值，并另行限制进程/container内存、queue和应用总并发数。
+
+上传服务应使用受宿主deadline和内存限制的worker。等待Python future超时不会取消正在
+执行的native操作；宿主必须能终止worker。根据实测内存行为回收worker；如果不能接受
+不完整的提取或渲染，也应检查`PylopdfWarning`。
+
+打开、编辑和保存不等于PDF净化。JavaScript不会执行，但保存不保证移除action、附件或
+敏感metadata。highlight、overlay和`replace_text()`不是安全redaction。展示或提交给LLM时，
+Markdown、链接和提取文本仍是不可信内容。原子文件替换保护已有输出免受普通写入失败影响，
+但不保证通过`fsync`实现断电后的持久性。
+
 ## 依赖审计 { #dependency-auditing }
 
-CI会在每次push时运行`cargo audit`，使用RustSec漏洞数据库审计Rust依赖树。
+CI会在每次pull request时运行`cargo audit`，使用RustSec漏洞数据库审计Rust依赖树。
+
+定期fuzzing每周执行；`Fuzz health`将失败或中断的run报告为failed check。维护者需监控结果。
+普通build提供Python coverage feedback，不包含Rust branch instrumentation。
 
 本政策在仓库中的正本为
 [`SECURITY.md`](https://github.com/yhay81/pylopdf/blob/main/SECURITY.md)。

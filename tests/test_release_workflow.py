@@ -61,3 +61,50 @@ def test_font_release_attests_a_content_complete_reproducible_sbom() -> None:
     assert '--source-date-epoch "$(git show -s --format=%ct "$GITHUB_SHA")"' in workflow
     assert "sbom-path: release/sbom.spdx.json" in workflow
     assert "anchore/sbom-action" not in workflow
+
+
+def test_workflow_budgets_allow_builds_and_the_complete_fuzz_session() -> None:
+    workflows = _ROOT / ".github" / "workflows"
+    for path in workflows.glob("*.yml"):
+        budgets = [int(value) for value in re.findall(r"timeout-minutes: (\d+)", path.read_text())]
+        assert budgets, path.name
+        assert min(budgets) >= 5, path.name
+
+    fuzz = (workflows / "fuzz.yml").read_text()
+    duration = re.search(r"-max_total_time=(\d+)", fuzz)
+    budget = re.search(r"timeout-minutes: (\d+)", _job(fuzz, "api"))
+    assert duration is not None
+    assert budget is not None
+    # Reserve time for toolchain setup, a cold build, and reproducer upload.
+    assert int(budget[1]) * 60 >= int(duration[1]) + 15 * 60
+
+
+def test_ci_and_release_use_checked_in_dependency_graphs() -> None:
+    workflows = _ROOT / ".github" / "workflows"
+    for name in ("ci.yml", "fuzz.yml", "docs.yml"):
+        workflow = (workflows / name).read_text()
+        sync_commands = re.findall(r"uv sync[^\n]*", workflow)
+        assert sync_commands
+        assert all("--locked" in command for command in sync_commands), name
+        assert not re.search(r"uv run (?!\-\-no-sync)", workflow), name
+    release = _WORKFLOW.read_text()
+    for name in ("build-wheels", "build-free-threaded-wheels"):
+        assert "args: --release --locked" in _job(release, name)
+    assert "MATURIN_PEP517_ARGS: --locked" in release
+    assert (
+        'export MATURIN_PEP517_ARGS="${MATURIN_PEP517_ARGS:+${MATURIN_PEP517_ARGS} }--locked"'
+        in (_ROOT / "tools" / "build_pyodide.sh").read_text()
+    )
+
+
+def test_fuzz_health_observes_cancellations_without_executing_run_code() -> None:
+    health = (_ROOT / ".github" / "workflows" / "fuzz-health.yml").read_text()
+    assert "workflow_run:" in health
+    assert "workflows: [Fuzz]" in health
+    assert "types: [completed]" in health
+    assert "permissions: {}" in health
+    assert "checkout@" not in health
+    assert "github.event.workflow_run.conclusion" in health
+    assert '"$FUZZ_CONCLUSION" != "success"' in health
+    assert "GITHUB_STEP_SUMMARY" in health
+    assert "exit 1" in health

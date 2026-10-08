@@ -6,12 +6,13 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  MATURIN_PEP517_ARGS: --locked
 
 jobs:
   # Audit the Rust dependency tree against the RustSec advisory database.
   audit:
     name: audit (RustSec)
-    timeout-minutes: 1
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -22,7 +23,7 @@ jobs:
   # Validate the abi3-py310 floor with the oldest supported Python version.
   test-py310:
     name: test (Python 3.10 lower bound)
-    timeout-minutes: 1
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -32,15 +33,15 @@ jobs:
           workspaces: rust
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       - name: Build and install (Python 3.10)
-        run: uv sync --all-extras --group interop --python 3.10
+        run: uv sync --locked --all-extras --group interop --python 3.10
       - name: Test
-        run: uv run pytest
+        run: uv run --no-sync pytest
       - name: Record native Pyodide compatibility baseline
         run: |
-          uv run python tools/pyodide_compat.py \
+          uv run --no-sync python tools/pyodide_compat.py \
             --root . \
             --output native-compat/results.json
-          uv run python tools/pyodide_compat.py \
+          uv run --no-sync python tools/pyodide_compat.py \
             --root . \
             --benchmark-only \
             --benchmark-output native-compat/limits-benchmark.json
@@ -53,7 +54,7 @@ jobs:
   # Test the version-specific ABI without silently falling back to the GIL.
   test-free-threaded:
     name: test (Python 3.14t free-threaded)
-    timeout-minutes: 1
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -68,21 +69,21 @@ jobs:
       - name: Build and install (Python 3.14t)
         # Keep this lane focused on pylopdf: optional interop extensions may not
         # publish cp314t wheels on the same schedule.
-        run: uv sync --all-extras --python 3.14t
+        run: uv sync --locked --all-extras --python 3.14t
       - name: Verify free-threaded import
         run: >-
-          uv run python -c
+          uv run --no-sync python -c
           "import sys, sysconfig, pylopdf;
           assert sysconfig.get_config_var('Py_GIL_DISABLED') == 1;
           assert not sys._is_gil_enabled()"
       - name: Test
-        run: uv run pytest
+        run: uv run --no-sync pytest
 
   test-pyemscripten:
     name: test (Pyodide 0.28.3)
     needs: test-py310
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 60
     env:
       UV_PYTHON_DOWNLOADS: automatic
     steps:
@@ -147,7 +148,7 @@ jobs:
 
   test:
     name: test (${{ matrix.os }})
-    timeout-minutes: 1
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -165,19 +166,19 @@ jobs:
       - name: Rust format check
         run: cargo fmt --manifest-path rust/Cargo.toml --check
       - name: Rust lint
-        run: cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
+        run: cargo clippy --locked --manifest-path rust/Cargo.toml --all-targets -- -D warnings
       - name: Build and install
         # The interop group tests the ecosystem recipes documented in the README.
-        run: uv sync --all-extras --group interop
+        run: uv sync --locked --all-extras --group interop
       - name: Validate project metadata
-        run: uv run pre-commit run validate-pyproject --all-files
+        run: uv run --no-sync pre-commit run validate-pyproject --all-files
       - name: Python lint
-        run: uv run ruff check .
+        run: uv run --no-sync ruff check .
       - name: Repository language
-        run: uv run python tools/check_repository_language.py
+        run: uv run --no-sync python tools/check_repository_language.py
       - name: Python format check
-        run: uv run ruff format --check .
+        run: uv run --no-sync ruff format --check .
       - name: Type check
-        run: uv run mypy src tests
+        run: uv run --no-sync mypy src tests
       - name: Test
-        run: uv run pytest
+        run: uv run --no-sync pytest

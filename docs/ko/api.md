@@ -48,6 +48,19 @@ Flate는predictor가 없거나 사전과 일치하는PNG predictor를 사용할 
 않습니다. 한 번의 호출에서 해석하는 간접raster placement가65,536개를 초과하면
 거부합니다. 같은 설정의 반복 호출은 멱등입니다.
 
+### 페이지 가져오기와 출력 보존 범위
+
+`insert_pdf()`와`merge()` helper는 page의 content와 resource를 가져오지만 source Catalog의
+AcroForm registry, outline, named destination, page label, optional-content 설정이나
+ tagged-PDF 구조를 병합하지 않습니다. widget 또는 link의 외관이 복사되어도 문서 전체 기능이
+보존된다는 뜻은 아닙니다. 결합 후 이 기능들을 개별 검증하고 올바른 render만으로 보존을 판단하지
+마세요. page label은 index range이므로 구조 편집 후 검토하거나 재설정하고 재정렬된 page를
+자동으로 따라간다고 가정하지 마세요.
+
+save는 PDF를 다시 쓰므로 기존 digital signature를 보존하지 않습니다. POSIX에서 새 PDF와 PNG
+출력의 mode는`0600`이며 기존 regular file을 교체할 때는 mode를 보존합니다. 원자적 교체는
+일반 쓰기 실패에서 기존 출력을 보호하지만`fsync`지속성을 보장하지 않습니다.
+
 ## Page { #page }
 
 | 멤버 | 용도 |

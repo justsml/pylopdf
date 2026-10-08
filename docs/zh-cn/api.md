@@ -46,6 +46,18 @@ parameter不受支持；Flate可无predictor或使用与字典一致的PNG predi
 不支持的间接图像以及不会变小的编码会被跳过；inline图像不计入统计。单次调用解释
 超过65,536个间接raster placement时会被拒绝。用相同设置重复调用是幂等的。
 
+### 页面导入与输出保留范围
+
+`insert_pdf()`和`merge()` helper导入页面的content与resource，但不会合并来源Catalog的
+AcroForm registry、书签、named destination、page label、optional-content配置或tagged-PDF
+结构。复制widget或link的外观不代表保留其文档级功能。合并后应单独验证这些功能，不能仅凭
+正确渲染判断保留完整性。page label是index range，结构编辑后应复核或重新设置，不要假设
+它会自动跟随重排页面。
+
+save会重写PDF，不保留已有digital signature。POSIX上新建PDF和PNG输出使用`0600`权限，
+替换已有regular file则保留其mode。原子替换保护已有输出免受普通写入失败影响，但不保证
+`fsync`持久性。
+
 ## Page { #page }
 
 | 成员 | 用途 |

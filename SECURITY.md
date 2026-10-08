@@ -111,7 +111,53 @@ risky. When processing untrusted files:
   containerized environment, and enforce CPU deadlines in the host. pylopdf
   resource budgets do not provide in-process time cancellation.
 
+## Enforcement phases and service boundaries
+
+Ordinary `open()` leaves `DocumentLimits` fields unbounded unless a policy is
+supplied. The web preset is an opt-in starting point, not a process sandbox.
+
+- **Before parsing:** file-byte and password-byte limits reject oversized input.
+- **During parsing:** the loader supplies a decoded-stream boundary to lopdf.
+  This does not make every parser allocation fallible or bound aggregate RSS.
+- **After parsing, before return:** object counts, direct-object depth, page
+  limits, and cumulative/page-content decompression validate the parsed graph.
+  Rejecting these limits can follow substantial parsing work and allocation.
+- **During interpretation/output:** snapshot bytes, cumulative glyphs/text, and
+  supported output writers enforce their respective admissions. Some upstream
+  results, notably SVG's internal string, are completed before the output check.
+
+`LimitError` covers documented policy refusals with stable codes. Some fixed
+implementation caps and allocation failures raise `PdfError` instead. Handle
+`PdfError` for rejection of malformed, unsupported, or over-budget PDFs; use
+`LimitError.code` when the application needs to classify a policy refusal.
+
+Encoded-output budgets, pixel limits, cache entry counts, and `render_pages()`
+worker estimates are not whole-process memory limits. The parsed graph,
+interpretation snapshots, caches, fonts, image decoders, completed output, and
+Python objects coexist. OCR admission is per engine, so multiple engines can
+multiply live inference buffers. Clipped rendering still renders the full page;
+OCR clipping reduces detector input rather than the full-page raster cost.
+Measure peak memory for representative workloads and enforce process/container
+memory limits, bounded queues, and total application concurrency separately.
+
+For upload services, use disposable workers with host-enforced deadlines and
+bounded memory. A timeout while waiting on a Python future does not cancel an
+in-progress native operation; the host must be able to terminate the worker.
+Recycle workers according to measured memory behavior and catch `PdfError` at
+the job boundary. Review `PylopdfWarning` when incomplete extraction/rendering
+would be unacceptable.
+
+Opening, editing, or saving does not sanitize a PDF. Unsupported JavaScript is
+not executed, but saving is not a promise to remove actions, attachments, or
+sensitive metadata. Highlights, overlays, and `replace_text()` are not secure
+redaction. Treat extracted Markdown, links, and text as untrusted when displaying
+it or passing it to an LLM. Atomic file replacement protects existing output from
+ordinary write failure; it does not promise crash durability through `fsync`.
+
 ## Dependency auditing
 
 CI runs `cargo audit` against the Rust dependency tree (RustSec advisory
-database) on every push.
+database) on every pull request. Scheduled public-API fuzzing also runs weekly.
+The `Fuzz health` workflow reports incomplete or failed fuzz runs as failed checks;
+maintainers must monitor these results. Its normal build has Python coverage
+feedback, not native Rust branch instrumentation; see `fuzz/README.md`.

@@ -125,6 +125,8 @@ export PATH="${TOOL_VENV}/bin:${PATH}"
     --force
 
 export RUSTUP_TOOLCHAIN="${RUST_TOOLCHAIN}"
+# Enforce the checked-in Rust dependency graph through maturin's PEP 517 backend.
+export MATURIN_PEP517_ARGS="${MATURIN_PEP517_ARGS:+${MATURIN_PEP517_ARGS} }--locked"
 # Emscripten 4.0.9 rejects legacy Rust export names containing `$u7b$`.
 # Rust v0 mangling keeps linker-visible names valid without changing the ABI.
 export RUSTFLAGS="-C symbol-mangling-version=v0 -C link-arg=-sSIDE_MODULE=2"
