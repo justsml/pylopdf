@@ -1,0 +1,4 @@
+# Table heading 
+
+<table><tr><th>Left</th><th>Center</th><th>Right</th></tr><tr><td>Alpha</td><td>A|B</td><td>42</td></tr><tr><td>Beta</td><td>C\D</td><td></td></tr></table>
+

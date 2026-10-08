@@ -262,7 +262,8 @@ criteria for math, Unicode/emoji, images, table spans/alignment, links, reading
 order, and document metadata. The study retains input PDFs and complete outputs
 from five libraries with explicit options, including PyMuPDF4LLM's legacy,
 layout, and HTML table modes. Parsed syntax probes help find losses and changes;
-they do not certify semantic correctness. OCR and formula-recognition models
+they do not certify semantic correctness. [Initial findings](bench/FINDINGS.md)
+document concrete differences. OCR and formula-recognition models
 remain separate workloads. Results are written to `bench/results/features-latest.{md,json}`.
 
 ## Architecture

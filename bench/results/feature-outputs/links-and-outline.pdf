@@ -1,0 +1,69 @@
+%PDF-1.7
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R /Names << /Dests 10 0 R >> /Outlines 11 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 5 0 R /Resources << /Font << /F1 7 0 R >> >> /Annots [8 0 R 9 0 R 13 0 R] >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 7 0 R >> >> >>
+endobj
+5 0 obj
+<< /Length 149  >>
+stream
+BT /F1 12 Tf 40 720 Td (External documentation) Tj ET
+BT /F1 12 Tf 40 680 Td (Jump to second page) Tj ET
+BT /F1 12 Tf 40 640 Td (Named section) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Length 50  >>
+stream
+BT /F1 18 Tf 40 720 Td (Destination section) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+8 0 obj
+<< /Type /Annot /Subtype /Link /Rect [40 716 200 734] /A << /S /URI /URI (https://example.org/docs) >> >>
+endobj
+9 0 obj
+<< /Type /Annot /Subtype /Link /Rect [40 676 200 694] /Dest [4 0 R /XYZ 40 720 null] >>
+endobj
+10 0 obj
+<< /Names [(section-two) [4 0 R /XYZ 40 720 null]] >>
+endobj
+11 0 obj
+<< /Type /Outlines /First 12 0 R /Last 12 0 R /Count 1 >>
+endobj
+12 0 obj
+<< /Title (Outline destination) /Parent 11 0 R /Dest [4 0 R /Fit] >>
+endobj
+13 0 obj
+<< /Type /Annot /Subtype /Link /Rect [40 636 200 654] /Dest (section-two) >>
+endobj
+xref
+0 14
+0000000000 65535 f 
+0000000009 00000 n 
+0000000102 00000 n 
+0000000165 00000 n 
+0000000320 00000 n 
+0000000446 00000 n 
+0000000647 00000 n 
+0000000748 00000 n 
+0000000818 00000 n 
+0000000939 00000 n 
+0000001042 00000 n 
+0000001112 00000 n 
+0000001186 00000 n 
+0000001271 00000 n 
+trailer
+<< /Size 14 /Root 1 0 R >>
+startxref
+1364
+%%EOF

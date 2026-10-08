@@ -379,7 +379,7 @@ def build_cases() -> list[FeatureCase]:
             ),
             ("tagged PDF", "logical reading order"),
             "Contrived tagged page: structure-tree order SECOND/FIRST differs from visual FIRST/SECOND. "
-            "The order probe measures tag priority, not a universal preferred reading order.",
+            "Stream order also matches tag order, so matching the reference does not prove tags were used.",
             expected_order=("SECOND", "FIRST"),
         )
     )

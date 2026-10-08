@@ -1,0 +1,60 @@
+%PDF-1.7
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R  >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R /F3 7 0 R /F4 8 0 R >> >>  >>
+endobj
+4 0 obj
+<< /Length 1225  >>
+stream
+BT /F1 20 Tf 40 740 Td (Full width heading) Tj ET
+BT /F1 10 Tf 40 700 Td (LEFT0 several words of left column prose) Tj ET
+BT /F1 10 Tf 320 700 Td (RIGHT0 several words of right column prose) Tj ET
+BT /F1 10 Tf 40 680 Td (LEFT1 several words of left column prose) Tj ET
+BT /F1 10 Tf 320 680 Td (RIGHT1 several words of right column prose) Tj ET
+BT /F1 10 Tf 40 660 Td (LEFT2 several words of left column prose) Tj ET
+BT /F1 10 Tf 320 660 Td (RIGHT2 several words of right column prose) Tj ET
+BT /F1 10 Tf 40 640 Td (LEFT3 several words of left column prose) Tj ET
+BT /F1 10 Tf 320 640 Td (RIGHT3 several words of right column prose) Tj ET
+BT /F1 10 Tf 40 620 Td (LEFT4 several words of left column prose) Tj ET
+BT /F1 10 Tf 320 620 Td (RIGHT4 several words of right column prose) Tj ET
+BT /F1 10 Tf 40 600 Td (LEFT5 several words of left column prose) Tj ET
+BT /F1 10 Tf 320 600 Td (RIGHT5 several words of right column prose) Tj ET
+BT /F1 10 Tf 40 580 Td (LEFT6 several words of left column prose) Tj ET
+BT /F1 10 Tf 320 580 Td (RIGHT6 several words of right column prose) Tj ET
+BT /F1 10 Tf 40 560 Td (LEFT7 several words of left column prose) Tj ET
+BT /F1 10 Tf 320 560 Td (RIGHT7 several words of right column prose) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique >>
+endobj
+8 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000059 00000 n 
+0000000116 00000 n 
+0000000273 00000 n 
+0000001551 00000 n 
+0000001621 00000 n 
+0000001696 00000 n 
+0000001774 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+1842
+%%EOF
