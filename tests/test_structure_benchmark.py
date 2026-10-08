@@ -12,6 +12,40 @@ from bench.feature_cases import FeatureCase, page_pdf, text_op
 from bench.structure_cases import StructureCase
 from bench.structure_core import markdown_spans, markdown_tables, render_tables, score_tables, validate_patch
 from bench.structure_hosted import HostedVision
+from bench.structure_summary import summarize
+
+
+def test_summary_keeps_failed_calls_in_reference_denominators() -> None:
+    reference = {
+        "table": {
+            "score": {"gold_available": True, "expected_tables": 1, "total_cells": 6, "relationship_expected": 7},
+            "record_checks": {"total": 3},
+        },
+        "prose": {"score": {"gold_available": True, "expected_tables": 0}},
+    }
+    failed: list[dict[str, Any]] = [
+        {"case": "table", "adapter": "patch", "error": "invalid JSON"},
+        {"case": "prose", "adapter": "patch", "score": {"exact": True}},
+    ]
+    totals = summarize(failed, reference)
+    assert (totals["positive_correct"], totals["positive_total"]) == (0, 1)
+    assert (totals["negative_correct"], totals["negative_total"]) == (1, 1)
+    assert totals["cells_total"] == 6
+    assert totals["relations_total"] == 7
+    assert totals["records_total"] == 3
+    assert totals["errors"] == 1
+    totals = summarize(
+        [
+            {
+                "case": "table",
+                "adapter": "retained-docling",
+                "error": "retained model output requires identical single-page input",
+            }
+        ],
+        reference,
+    )
+    assert totals["unsupported"] == 1
+    assert totals["positive_total"] == totals["errors"] == 0
 
 
 def source_words() -> list[dict[str, Any]]:

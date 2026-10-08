@@ -19,6 +19,7 @@ _API_BUDGET = 1.50
 _REQUEST_RESERVE = 0.25
 _MAX_PROMPT_BYTES = 200_000
 _MAX_IMAGE_SIDE = 1288
+_TABLE_THRESHOLD = 0.5
 
 
 class HostedVision:
@@ -130,3 +131,49 @@ class HostedVision:
             "ledger_index": result["ledger_index"],
             "cost_scope": "metered API control; separate from local/remote GPU timings",
         }
+
+
+def gated_geometry(bundle: dict[str, Any], client: HostedVision) -> dict[str, Any]:
+    """Use text-only Jev for a typed table decision, then assemble unchanged source IDs."""
+    from bench.structure import ARTIFACTS, write_json  # noqa: PLC0415
+    from bench.structure_core import geometry_tables, render_tables, validate_patch  # noqa: PLC0415
+
+    words = bundle["words"]
+    payload = {"tables": [{"rows": table} for table in geometry_tables(words, wrapped=True)]}
+    body = {
+        "model": "typesafe/jev-1.13",
+        "state": {
+            "word_format": ["id", "x0", "y0", "x1", "y1", "text"],
+            "source_words": [
+                [word["id"], *[round(v, 1) for v in word["logical_bbox"]], word["text"]] for word in words
+            ],
+            "candidate_tables": payload["tables"],
+        },
+        "questions": {
+            "has_table": {
+                "type": "noul",
+                "instructions": "The source words contain a table of related records or measurements with shared "
+                "columns. Aligned independent prose paragraphs, equations, headings, footnotes and lists "
+                "are not tables. "
+                "Use source_words and candidate_tables as evidence; the geometric candidates may be false positives.",
+            }
+        },
+    }
+    directory = ARTIFACTS / bundle["name"]
+    write_json(directory / "jev-text-gated-geometry-wrapped-request.json", body)
+    result = client.request("alpha/decisions", body)
+    (directory / "jev-text-gated-geometry-wrapped-raw.txt").write_text(json.dumps(result, indent=2))
+    probability = result["answers"]["has_table"]["noul"]
+    if probability < _TABLE_THRESHOLD:
+        payload = {"tables": []}
+    matrices, used = validate_patch(payload, words)
+    write_json(directory / "jev-text-gated-geometry-wrapped-patch.json", payload)
+    return {
+        "markdown": render_tables(matrices)
+        + "\n\n"
+        + " ".join(word["text"] for word in words if word["id"] not in used),
+        "tables": matrices,
+        "decision": result,
+        "decision_threshold": _TABLE_THRESHOLD,
+        "decision_scope": "text-only Jev; uncalibrated threshold; cannot recover missing OCR or generate cells",
+    }

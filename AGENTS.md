@@ -25,6 +25,8 @@ overview.
 - Non-English text is allowed only in localized documentation and data required
   to test Unicode or CJK behavior.
 - Do not place experiments unrelated to PDF processing in this repository.
+- Do not run benchmark inference or training on the local GPU. Use a remote GPU
+  within the user's authorized spending cap; local checks must remain CPU-only.
 
 ## Development commands
 

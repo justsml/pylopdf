@@ -138,11 +138,11 @@ class Engines:
         self.ocr = None
         self.hosted: Any = None
         start = time.perf_counter()
-        if "hosted" in adapter:
+        if "hosted" in adapter or adapter.startswith("jev-text"):
             from bench.structure_hosted import HostedVision  # noqa: PLC0415
 
             self.hosted = HostedVision(ROOT, router="jev" in adapter)
-            self.model_path = self.hosted.model
+            self.model_path = "typesafe/jev-1.13" if adapter.startswith("jev-text") else self.hosted.model
         elif adapter.startswith(("ocr", "hybrid")):
             model_root = ROOT / "models/pylopdf-ocr-models/src/pylopdf_ocr_models"
             self.ocr = pylopdf.OcrEngine(
@@ -241,6 +241,10 @@ class Engines:
 def run_adapter(bundle: dict[str, Any], engine: Engines, limit: int) -> dict[str, Any]:  # noqa: C901, PLR0911, PLR0912
     """Keep each intervention separate and retain rejected raw patches."""
     name = engine.adapter
+    if name.startswith("jev-text"):
+        from bench.structure_hosted import gated_geometry  # noqa: PLC0415
+
+        return gated_geometry(bundle, engine.hosted)
     if name.startswith("hybrid"):
         from bench.structure_hybrid import recover  # noqa: PLC0415
 
@@ -751,6 +755,8 @@ def main() -> None:  # noqa: C901
             "retained-marker-fast",
             "repair-qwen-image",
             "repair-qwen-text",
+            "repair-qwen-hosted-image",
+            "repair-qwen-hosted-compact-text",
             "yolo-geometry",
             "yolo-geometry-wrapped",
             "yolo-normalized-geometry-wrapped",
@@ -777,6 +783,9 @@ def main() -> None:  # noqa: C901
             "qwen-hosted-compact-patch",
             "qwen-jev-hosted-compact-text",
             "qwen-jev-hosted-compact-patch",
+            "jev-text-gated-geometry-wrapped",
+            "qwen-hosted-compact-row-patch",
+            "qwen-jev-hosted-compact-row-patch",
         ],
     )
     parser.add_argument("--case", action="append")

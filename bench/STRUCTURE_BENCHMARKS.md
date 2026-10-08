@@ -25,6 +25,9 @@ to the experiment and may itself miss Unicode or accessible text.
 The measured GPU environment uses Python 3.12, PyTorch CUDA 12.8, and a local
 RTX 3090 with 24 GiB VRAM. Keep it isolated from the CPU Docling/Marker environment.
 Choose a disk-backed path with room for model weights; `/tmp` may be a RAM disk.
+These commands describe the historical baseline. The user subsequently required
+all remaining GPU work to run remotely. The local coordinator was stopped and
+disabled; do not execute inference or training commands on the local GPU.
 
 ```bash
 uv venv --python 3.12 ~/.cache/pylopdf-structure-bench
@@ -164,5 +167,65 @@ Model licenses remain independent of pylopdf: [YOLO checkpoint](https://huggingf
 [olmOCR checkpoint](https://huggingface.co/allenai/olmOCR-2-7B-1025), and
 [Qwen checkpoint](https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct).
 The local study does not redistribute any model or trained adapter.
-Remote hosting is authorized up to $15 total; local inference consumes no remote
-hosting budget. Record every remote charge before enabling a hosted adapter.
+## Hosted and larger-memory controls
+
+The hosted controls use local `.env.remote-hosts` credentials without retaining
+credential values in artifacts. Run one hosted writer at a time: the cost ledger
+is not a concurrent transaction store. These commands send the preserved study
+page images and source word dumps to the configured inference provider.
+
+```bash
+uv run python -m bench.structure --device hosted-API \
+  --report bench/results/structure-hosted.json \
+  --adapter qwen-hosted-image --adapter qwen-hosted-compact-text \
+  --adapter qwen-hosted-compact-patch
+uv run python -m bench.structure --device hosted-API \
+  --report bench/results/structure-hosted.json \
+  --adapter jev-text-gated-geometry-wrapped \
+  --adapter qwen-jev-hosted-compact-text --adapter qwen-jev-hosted-compact-patch
+```
+
+Direct vision controls request `qwen/qwen3-vl-235b-a22b-instruct`. Direct Jev
+requests `typesafe/jev-1.13` through the typed decisions endpoint, using only
+text/coordinates and a proposed geometry grid. It gates candidates at a fixed,
+uncalibrated 0.5 threshold; it does not generate or repair missing cell content.
+The separate `typesafe/jev-router` experiments send screenshot plus text and
+request Qwen routing. The available router pool can ignore that preference;
+the actual served model, provider, and router metadata must accompany results.
+The adapter name describes the prompt family and does not prove Qwen served it.
+
+Every request reserves $0.25 before transmission against a separate $1.50 API
+study ceiling. Provider-reported usage replaces that reservation; absent usage
+keeps it. There are no automatic network retries. Full responses, costs, and
+generation IDs remain in the ignored hosted ledger and response directory.
+API latency includes network/provider work and is not local GPU throughput.
+
+The larger-memory control uses a rented Vast.ai RTX A6000 with 48 GiB VRAM,
+PyTorch 2.11.0/CUDA 12.8, and the same pinned model revisions and prepared inputs.
+It tests the Senate, NICS, and Form 1040 pages with full/compact text prompts,
+plus a separate 16,384-token image-only output-budget control on Senate/NICS.
+Reports are `structure-remote48{,-long}.{json,md}`. Input preparation stays local:
+the worker's published pylopdf 0.13.0 wheel provides scaffolding, since the local
+extension requires a newer glibc than the rental host. Native extraction/rendering
+timings from that worker are not claimed. Model inference and prepared inputs
+remain matched. Preserve remote logs/results before destroying the instance.
+
+The user authorized $15 total remote spend, including rental and API inference.
+The rental has a two-hour destruction watchdog and must also be destroyed after
+artifact collection. Record provider charges or explicitly labeled estimates
+in the final findings; do not infer actual billed dollars from elapsed time alone.
+
+Generate the compact, failure-inclusive comparison after all writers finish:
+
+```bash
+uv run python -m bench.structure_summary \
+  --report bench/results/structure-latest.json \
+  --report bench/results/structure-hosted.json \
+  --report bench/results/structure-remote48.json \
+  --report bench/results/structure-remote48-long.json
+```
+
+The comparison embeds each input report's snapshot hash. Failed model calls stay
+in the positive/negative and corpus-cell denominators; unsupported CPU artifact
+replays are reported separately. Cohorts with different denominators must not be
+compared as if every adapter ran the same cases.
