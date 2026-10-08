@@ -117,7 +117,9 @@ def retain_artifacts(result: dict[str, Any], retained: dict[str, Any], leaf: Pat
     """Serialize native structure and save referenced images outside conversion timing."""
     structured = retained["structured"]
     payload = (
-        structured.model_dump_json(indent=2) if result["adapter"] == "marker-fast" else structured.export_to_dict()
+        structured.model_dump_json(indent=2, exclude={"images"})
+        if result["adapter"] == "marker-fast"
+        else structured.export_to_dict()
     )
     serialized = payload if isinstance(payload, str) else json.dumps(payload, ensure_ascii=False, indent=2)
     structured_path = leaf / "structured.json"

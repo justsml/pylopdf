@@ -43,6 +43,9 @@ model startup is included in warmup; median conversion timings include inference
 and Markdown export. Structured JSON and external image serialization, syntax
 probes, and hashing occur outside that timer. Structured artifacts retain the
 first warmup result and are not separately timed extraction benchmarks.
+Marker's sidecar serializes the Markdown renderer's output and metadata, with
+PIL image objects saved as separate files; it is not the separate JSON renderer's
+block-tree output. Docling's sidecar is its native document tree.
 
 The JSON retains original run metadata plus `additional_runs`; each model result
 has a `run_index`. Original input hashes must match before adding measurements.
