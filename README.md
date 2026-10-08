@@ -156,8 +156,8 @@ default, and resource boundary.
   idempotent invisible searchable layers, clockwise rotation correction
 - **Untrusted input policy** — `DocumentLimits.web()` bounds file size, pages,
   objects, decompression, glyph and output budgets in one opt-in profile;
-  every documented cap raises a typed `LimitError` instead of degrading
-  silently ([security model](https://pylopdf.haya.works/security/))
+  policy refusals raise typed `LimitError`; fixed implementation caps and
+  allocation failures can raise `PdfError` without partial results ([security model](https://pylopdf.haya.works/security/))
 - **WebAssembly** — a static PyEmscripten wheel runs on Cloudflare Python
   Workers, verified end-to-end every release
   ([guide](https://pylopdf.haya.works/wasm/))

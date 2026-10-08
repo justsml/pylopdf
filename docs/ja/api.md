@@ -48,6 +48,19 @@ predictorに対応します。解釈された非対応の間接画像と結果�
 skipし、inline画像は集計対象外です。1回の呼び出しで解釈する間接raster配置が
 65,536件を超える場合は拒否します。同じ設定の再実行は冪等です。
 
+### ページ取り込みと出力の保持範囲
+
+`insert_pdf()`と`merge()` helperはpageのcontentとresourceを取り込みます。
+元のCatalogにあるAcroForm registry、outline、named destination、page label、
+optional-content設定、tagged-PDF構造は統合しません。widgetやlinkの外観がコピーされても、
+document全体での機能が保持されるとは限りません。結合後はこれらの機能を個別に検証し、
+renderが正しいだけで保持を判断しないでください。page labelはindex rangeなので、構造編集後は
+見直し・再設定し、並べ替えたpageに自動追従すると仮定しないでください。
+
+saveはPDFを書き直すため、既存のdigital signatureを保持しません。POSIXでは新規PDF・PNG
+出力のmodeは`0600`で、既存regular fileの置換時はmodeを保持します。原子的な置換は通常の
+書き込み失敗から既存出力を守りますが、`fsync`による永続性は保証しません。
+
 ## Page { #page }
 
 | メンバ | 用途 |

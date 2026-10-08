@@ -1,0 +1,27 @@
+name: Fuzz health
+
+on:
+  workflow_run:
+    workflows: [Fuzz]
+    types: [completed]
+
+# This observer never checks out or executes code from the observed run.
+permissions: {}
+
+jobs:
+  completed:
+    name: Verify fuzz completed successfully
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Record fuzz result and reject incomplete runs
+        env:
+          FUZZ_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          FUZZ_RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          printf 'Fuzz conclusion: **%s**\n\n[Inspect the run](%s)\n' \
+            "$FUZZ_CONCLUSION" "$FUZZ_RUN_URL" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$FUZZ_CONCLUSION" != "success" ]]; then
+            echo '::error::Fuzz did not complete successfully; inspect setup, timeout, and reproducer steps.'
+            exit 1
+          fi

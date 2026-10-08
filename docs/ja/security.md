@@ -244,10 +244,46 @@ xref dataを正規化します。
   nativeとPyodideのCIは同じhostile-input回帰契約を共有し、定期Atheris fuzzingは
   壊れたxref、cycle、深いobject、broken stream、圧縮bombをseedにします。
 
+## 検査段階とサービスの境界
+
+通常の`open()`では、policyを渡さない限り`DocumentLimits`の各項目は無制限です。
+web presetは明示的に選ぶ開始点であり、process sandboxではありません。
+
+- parse前にfile byteとpassword byteを検査します。
+- parse中はlopdfへdecoded stream上限を渡しますが、全parser allocationやRSSを制限するわけではありません。
+- parse後、返却前にobject数、direct-object depth、page数、累積・page-content decompressionを検査します。この拒否までに大きなallocationやCPU処理が発生することがあります。
+- interpretationと出力ではsnapshot、glyph/text、対応writerの予算を検査します。SVGの内部stringなど、上流が完成させた後でしか検査できない出力もあります。
+
+policy拒否は安定したcodeを持つ`LimitError`ですが、固定実装上限やallocation失敗は
+`PdfError`になる場合があります。job境界では`PdfError`を捕捉し、分類が必要なpolicy拒否は
+`LimitError.code`で扱ってください。
+
+encoded output、pixel、cache entry数、`render_pages()`のworker推定はprocess全体の
+memory上限ではありません。parsed graph、snapshot、cache、font、decoder、完成出力、
+Python objectは同時に存在します。OCR admissionはengineごとなので、複数engineでbufferが
+増えます。clipでも全page rasterを作り、OCR clipはdetector入力だけを縮小します。
+実際のpeak memoryを測定し、process/container上限、queue、application全体の並列数を
+別に制限してください。
+
+upload serviceはhostでdeadlineとmemoryを制限したworkerで実行してください。
+Python futureの待機timeoutだけではnative処理は中断しません。hostがworkerを終了できる
+必要があります。実測に応じてworkerを再利用・交換し、不完全な抽出やrenderを許せない場合は
+`PylopdfWarning`も確認してください。
+
+open・edit・saveはPDFの無害化ではありません。JavaScriptは実行しませんが、saveでaction、
+attachment、機密metadataを除去する保証はありません。highlight、overlay、`replace_text()`は
+安全なredactionではありません。Markdown、link、抽出textは表示やLLM入力でも信頼しないで
+ください。原子的なfile置換は通常の書き込み失敗から既存fileを守りますが、`fsync`による
+crash durabilityは保証しません。
+
 ## 依存関係の監査 { #dependency-auditing }
 
-CIはpushごとに`cargo audit`を実行し、Rust依存ツリーをRustSecの脆弱性データベースと
+CIはpull requestごとに`cargo audit`を実行し、Rust依存ツリーをRustSecの脆弱性データベースと
 照合します。
+
+定期fuzzingは毎週実行し、`Fuzz health`は失敗・中断したrunをfailed checkで示します。
+管理者は結果を監視してください。通常buildのcoverage feedbackはPythonのみで、Rust branch
+のinstrumentationではありません。
 
 リポジトリ上の正本は
 [`SECURITY.md`](https://github.com/yhay81/pylopdf/blob/main/SECURITY.md)です。

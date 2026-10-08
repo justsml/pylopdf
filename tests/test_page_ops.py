@@ -155,3 +155,71 @@ def test_structure_ops_invalidate_pages(three_page_pdf: bytes) -> None:
     doc.new_page()
     with pytest.raises(pylopdf.StalePageError):
         _ = page.mediabox
+
+
+def test_cached_page_order_tracks_structural_edits() -> None:
+    """Warm both count and ID lookups before each change to the page tree."""
+    doc = pylopdf.open()
+
+    def widths() -> list[float]:
+        assert doc.page_count == len(doc)
+        return [page.rect.width for page in doc]
+
+    assert widths() == []
+    doc.new_page(width=100, height=200)
+    assert widths() == [100]
+    doc.new_page(width=300, height=200)
+    assert widths() == [100, 300]
+    doc.copy_page(0, to=1)
+    assert widths() == [100, 100, 300]
+    doc.select([2, 0, 2])
+    assert widths() == [300, 100, 300]
+    doc.delete_pages([0, 1])
+    assert widths() == [300]
+
+    source = pylopdf.open()
+    source.new_page(width=500, height=200)
+    assert source.page_count == 1
+    doc.insert_pdf(source, start_at=0)
+    assert widths() == [500, 300]
+    doc.select([])
+    assert widths() == []
+    doc.new_page(width=700, height=200)
+    assert widths() == [700]
+
+    reloaded = pylopdf.open(stream=doc.tobytes())
+    assert reloaded.page_count == 1
+    assert reloaded[0].rect.width == 700
+
+
+def test_cached_page_ids_survive_content_and_output_changes() -> None:
+    doc = pylopdf.open()
+    doc.new_page(width=123, height=200)
+    doc.new_page(width=456, height=200)
+    assert [page.rect.width for page in doc] == [123, 456]
+
+    doc[0].insert_text((10, 30), "Retained page")
+    doc.set_metadata({"title": "Updated metadata"})
+    doc.tobytes(garbage=True, deflate=True, object_streams=True)
+
+    assert doc.page_count == 2
+    assert [page.rect.width for page in doc] == [123, 456]
+    assert "Retained page" in doc[0].get_text()
+    doc.copy_page(1, to=0)
+    assert [page.rect.width for page in doc] == [456, 123, 456]
+
+
+def test_core_import_duplicate_pages_have_independent_dictionaries(one_page_pdf: bytes) -> None:
+    source = pylopdf.open(stream=one_page_pdf)
+    target = pylopdf.open()
+    target._doc.merge_pages(source._doc, [1, 1], None)  # noqa: SLF001  # Exercise the native boundary.
+
+    assert target.page_count == 2
+    assert target[0].get_text() == target[1].get_text()
+    target[0].set_rotation(90)
+    assert target[0].rotation == 90
+    assert target[1].rotation == 0
+    reloaded = pylopdf.open(stream=target.tobytes())
+    assert reloaded.page_count == 2
+    assert reloaded[0].rotation == 90
+    assert reloaded[1].rotation == 0

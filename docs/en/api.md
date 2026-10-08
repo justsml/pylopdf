@@ -50,6 +50,22 @@ indirect images and encodings that would not be smaller are skipped; inline
 images are not considered. One call rejects more than 65,536 interpreted
 indirect raster placements. Repeating the same settings is idempotent.
 
+### Page import and output preservation
+
+`insert_pdf()` and the `merge()` helper import pages with their content and
+resources. They do not merge the source Catalog's AcroForm registry, outlines,
+named destinations, page labels, optional-content configuration, or tagged-PDF
+structure. A copied widget or link can retain its appearance without preserving
+its document-level functionality. Validate those features separately when
+combining documents; correct rendering alone does not establish preservation.
+Page labels are index ranges; review or reset them after structural edits rather
+than assuming they follow reordered pages.
+
+Saving rewrites the PDF and does not preserve existing digital signatures. On
+POSIX, new PDF and PNG output files use mode `0600`; replacing an existing
+regular file preserves its mode. Atomic replacement protects existing output
+from ordinary write failures, but does not provide an `fsync` durability promise.
+
 ## Page { #page }
 
 | Member | Purpose |

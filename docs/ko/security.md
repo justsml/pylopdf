@@ -248,10 +248,46 @@ rollback은 하지 않습니다. 복구 시`PylopdfWarning`이 발생하고
   native와Pyodide CI는 같은 hostile-input 회귀 계약을 공유하며, 정기 Atheris
   fuzzing은 손상된 xref, cycle, 깊은 object, broken stream, 압축 bomb을 seed로 사용합니다.
 
+## 검사 단계와 서비스 경계
+
+일반`open()`은 정책을 전달하지 않으면`DocumentLimits`필드가 무제한입니다.
+web preset은 명시적으로 선택하는 시작점이며 process sandbox가 아닙니다.
+
+- parse 전에 파일 byte와 password byte를 검사합니다.
+- parse 중 lopdf에 decoded stream 상한을 전달하지만 모든 parser allocation이나 RSS를 제한하지는 않습니다.
+- parse 후 반환 전에 object 수, direct-object depth, page 수와 누적/page-content decompression을 검사합니다. 거절 전에 상당한 allocation과 CPU 작업이 발생할 수 있습니다.
+- interpretation과 출력에서 snapshot, glyph/text와 지원 writer 예산을 검사합니다. SVG 내부 string 등 일부 upstream 결과는 완성 후에만 검사할 수 있습니다.
+
+정책 거절은 안정적인 code가 있는`LimitError`를 사용하지만, 일부 고정 구현 상한과 allocation
+실패는`PdfError`를 사용합니다. job 경계에서`PdfError`를 처리하고 정책 거절을 분류해야 할 때
+`LimitError.code`를 확인하세요.
+
+encoded output 예산, pixel 상한, cache entry 수와`render_pages()`의 worker 추정치는
+전체 process memory 상한이 아닙니다. parsed graph, snapshot, cache, font, decoder,
+완성 출력과 Python object가 공존합니다. OCR admission은 engine별이므로 여러 engine은
+추론 buffer를 늘립니다. clip도 전체 page raster를 만들며 OCR clip은 detector 입력만 줄입니다.
+실제 peak memory를 측정하고 process/container memory, queue와 전체 application 병렬 수를
+별도로 제한하세요.
+
+upload service에는 host deadline과 memory 제한이 있는 worker를 사용하세요.
+Python future 대기 timeout은 실행 중인 native 작업을 취소하지 않습니다. host가 worker를
+종료할 수 있어야 합니다. 측정한 memory 동작에 따라 worker를 교체하고, 불완전한 추출이나
+render가 허용되지 않으면`PylopdfWarning`도 확인하세요.
+
+open, edit, save는 PDF를 무해하게 만들지 않습니다. JavaScript는 실행하지 않지만 save가
+action, attachment 또는 민감한 metadata 제거를 보장하지 않습니다. highlight, overlay와
+`replace_text()`는 안전한 redaction이 아닙니다. Markdown, link와 추출 text는 표시하거나
+LLM에 전달할 때도 신뢰할 수 없는 입력입니다. 원자적 file 교체는 일반 쓰기 실패에서 기존 출력을
+보호하지만`fsync`에 의한 crash durability를 보장하지 않습니다.
+
 ## 의존성 감사 { #dependency-auditing }
 
-CI는 push할 때마다 RustSec 취약점 데이터베이스를 기준으로 Rust 의존성 트리에
+CI는 pull request마다 RustSec 취약점 데이터베이스를 기준으로 Rust 의존성 트리에
 `cargo audit`를 실행합니다.
+
+정기 fuzzing은 매주 실행하며`Fuzz health`는 실패하거나 중단된 run을 failed check로 표시합니다.
+관리자가 결과를 확인해야 합니다. 일반 build의 coverage feedback은 Python이며 Rust branch
+instrumentation은 포함하지 않습니다.
 
 저장소의 정책 원본은
 [`SECURITY.md`](https://github.com/yhay81/pylopdf/blob/main/SECURITY.md)입니다.

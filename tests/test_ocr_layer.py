@@ -87,6 +87,19 @@ def test_ocr_layer_survives_save_roundtrip() -> None:
     assert reopened[0].search_for("残存")
 
 
+def test_ocr_layer_unicode_map_crosses_blocks_and_preserves_surrogates() -> None:
+    text = "".join(chr(codepoint) for codepoint in range(0x410, 0x410 + 105)) + "😀"
+    doc = _blank_page_doc()
+    doc[0].insert_ocr_text_layer([(10, 20, 290, 40, text)])
+
+    data = doc.tobytes()
+    assert b"100 beginbfchar" in data
+    assert b"6 beginbfchar" in data
+    assert b"<D83DDE00>" in data
+    reopened = pylopdf.open(stream=data)
+    assert reopened[0].get_text().strip() == text
+
+
 def test_ocr_layer_accepts_get_text_words_shape() -> None:
     # Pass get_text("words") eight-item tuples directly; only the first five
     # items are used.

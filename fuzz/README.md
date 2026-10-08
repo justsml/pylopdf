@@ -1,35 +1,52 @@
-# pylopdf fuzzing
+# Public API fuzzing
 
-`fuzz_api.py` uses Atheris to mutate PDF bytes while exercising the public
-pylopdf workflow:
+The scheduled `Fuzz` workflow builds the locked environment, generates malformed
+PDF seeds, and runs the public workflow for ten minutes. It retains crash
+reproducers before reporting failure. Its thirty-minute job budget also allows
+toolchain setup and a cold extension build. `Fuzz health` observes completed runs
+without executing their code and reports failed, cancelled, or timed-out runs as
+failed checks. Maintainers still need to monitor these workflow results; a check
+does not establish that a scheduled run was dispatched.
 
-1. open with a decompression limit;
-2. extract positioned text and search;
-3. render at low resolution;
-4. edit metadata and save with object streams;
-5. reopen and extract the saved output.
+To run locally:
 
-Invalid PDFs may raise `PdfError`. A Rust panic, process crash, hang, excessive
-memory use, or an exception outside the documented error hierarchy is a
-finding.
-
-Run a bounded local session with a writable output corpus followed by the
-redistributable real-world seeds:
-
-```powershell
-uv sync --group fuzz --python 3.13
-New-Item -ItemType Directory -Force fuzz/corpus
-uv run python fuzz/fuzz_api.py `
-  -max_total_time=300 -timeout=60 -rss_limit_mb=2048 -max_len=1048576 `
-  fuzz/corpus tests/assets/real_world
+```bash
+uv sync --locked --group fuzz --python 3.13
+uv run --no-sync python fuzz/generate_corpus.py --output /tmp/pylopdf-corpus
+uv run --no-sync python fuzz/fuzz_api.py -max_total_time=600 -timeout=60 \
+  -rss_limit_mb=2048 -max_len=1048576 /tmp/pylopdf-corpus tests/assets/real_world
 ```
 
-The per-input timeout is 60 seconds. Heavily mutated, otherwise small PDFs can
-spend tens of seconds inside upstream lopdf/hayro native code, which does not
-yet offer cooperative cancellation. This remains a hang detector rather than a
-public latency guarantee; minimize slow units and add a Python regression when
-pylopdf can remove the bottleneck.
+Expected `PdfError` refusals are handled; crashes, Rust panics, and exceptions
+outside the public hierarchy fail the run. Independent readers handle their own
+expected refusals so an unsupported feature does not prevent later operations.
+Trees, images, vector drawings, tables, Markdown, extraction, rendering, metadata,
+serialization, and reopening are exercised. Native OCR model inference is outside
+this harness.
 
-Minimize a reproducer before adding it to the regression corpus. Record its
-source, license, and known limitations in `tests/assets/real_world/README.md`.
-Never upload a confidential or non-redistributable PDF as a fuzz seed.
+The per-input timeout is a hang detector, not a public latency guarantee.
+Upstream native work has no cooperative cancellation. Minimize slow or crashing
+units before adding a Python regression. Record corpus sources, licenses, and
+limitations in `tests/assets/real_world/README.md`; never upload confidential or
+non-redistributable documents as seeds.
+
+## Native coverage boundary
+
+`atheris.instrument_imports()` instruments Python. The normal stable Rust build
+does **not** deliver Rust parser/interpreter branch coverage to libFuzzer, and
+this workflow does not claim native sanitizer coverage. Native failures can still
+be detected through the public API, but Python coverage alone provides weak
+feedback for mutations that take different paths entirely within Rust.
+
+A dedicated native lane remains necessary. It must use a compatible Rust/LLVM
+coverage build and libFuzzer runtime, verify sanitizer-coverage symbols in the
+extension, and demonstrate changing native coverage during a corpus run before
+being described as native coverage-guided fuzzing. A pinned toolchain and separate
+build cache are required so its instrumented binary never becomes a release
+artifact. AddressSanitizer additionally requires a compatible runtime loaded
+before Python and a smoke test of imports and expected-error paths.
+
+See [Atheris native-extension guidance](https://github.com/google/atheris/blob/master/native_extension_fuzzing.md)
+and [Rust sanitizer support](https://doc.rust-lang.org/unstable-book/compiler-flags/sanitizer.html).
+Instrumenting or measuring Python coverage does not verify these native
+requirements.

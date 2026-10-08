@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import errno
 import os
 import stat
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
+from typing import BinaryIO
 
 import pytest
 from conftest import build_pdf, build_raw_pdf
@@ -775,3 +777,154 @@ def test_inherited_page_parent_cycle_does_not_hang(one_page_pdf: bytes) -> None:
     assert isinstance(doc.get_page_text(0), str)
     with pytest.raises(ValueError, match="reference cycle"):
         _ = doc[0].mediabox
+
+
+def test_close_releases_core_while_page_view_is_retained(one_page_pdf: bytes) -> None:
+    doc = pylopdf.open(stream=one_page_pdf)
+    page = doc[0]
+    # Exercise retained interpretations before closing a real document.
+    page.get_text("dict")
+    page.render()
+    doc.close()
+    doc.close()
+
+    assert doc.__dict__["_core"] is None
+    for operation in (lambda: page.rotation, page.get_text, page.get_images, page.get_drawings, page.find_tables):
+        with pytest.raises(pylopdf.DocumentClosedError, match="document closed"):
+            operation()
+
+
+def test_close_releases_encrypted_source(one_page_pdf: bytes) -> None:
+    encrypted = pylopdf.open(stream=one_page_pdf).tobytes(user_pw="user", owner_pw="owner")
+    doc = pylopdf.open(stream=encrypted)
+    assert doc.is_encrypted
+    assert doc.__dict__["_source_bytes"] is encrypted
+
+    doc.close()
+
+    assert doc.__dict__["_source_bytes"] is None
+    assert doc.__dict__["_source_path"] is None
+    assert doc.__dict__["_core"] is None
+    with pytest.raises(pylopdf.DocumentClosedError):
+        doc.authenticate("user")
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Windows mode bits do not expose the POSIX contract")
+def test_atomic_save_temporary_is_private_during_write(tmp_path: Path) -> None:
+    target = tmp_path / "output.pdf"
+    target.write_bytes(b"original")
+    target.chmod(0o640)
+
+    def writer(file: BinaryIO) -> None:
+        assert stat.S_IMODE(os.fstat(file.fileno()).st_mode) == 0o600
+        file.write(b"completed")
+        assert stat.S_IMODE(os.fstat(file.fileno()).st_mode) == 0o600
+        assert target.read_bytes() == b"original"
+
+    pylopdf._atomic_save_file(target, writer)  # noqa: SLF001
+
+    assert target.read_bytes() == b"completed"
+    assert stat.S_IMODE(target.stat().st_mode) == 0o640
+    assert list(tmp_path.glob(".pylopdf-*.tmp")) == []
+
+
+def test_iteration_rejects_structure_changes(three_page_pdf: bytes) -> None:
+    doc = pylopdf.open(stream=three_page_pdf)
+    pages = iter(doc)
+    assert next(pages).number == 0
+    doc.delete_page(0)
+    with pytest.raises(pylopdf.StalePageError, match="structure changed during iteration"):
+        next(pages)
+
+
+def test_iteration_rejects_close(three_page_pdf: bytes) -> None:
+    doc = pylopdf.open(stream=three_page_pdf)
+    pages = iter(doc)
+    assert next(pages).number == 0
+    doc.close()
+    with pytest.raises(pylopdf.DocumentClosedError):
+        next(pages)
+
+
+def test_invalid_text_option_does_not_discover_fonts(one_page_pdf: bytes, monkeypatch: pytest.MonkeyPatch) -> None:
+    doc = pylopdf.open(stream=one_page_pdf)
+
+    def unexpected_discovery() -> None:
+        pytest.fail("invalid output option attempted font discovery")
+
+    monkeypatch.setattr(doc, "_ensure_fallback_fonts", unexpected_discovery)
+    with pytest.raises(ValueError, match="option must be one of"):
+        doc.get_page_text(0, "invalid")  # type: ignore[call-overload]
+
+
+@pytest.mark.parametrize("operation", ["select", "copy", "new", "insert", "delete"])
+def test_native_structural_refusal_preserves_page_views(operation: str, one_page_pdf: bytes) -> None:
+    """Keep the PDF and existing views when inherited-page planning rejects it."""
+    doc = pylopdf.open(
+        stream=build_raw_pdf(
+            {
+                1: "<< /Type /Catalog /Pages 2 0 R >>",
+                2: "<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>",
+                3: "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] >>",
+                4: "<< /Type /Page /Parent 5 0 R /MediaBox [0 0 100 100] >>",
+                5: "<< /Type /Pages /Parent 5 0 R >>",
+            }
+        )
+    )
+    good_page = doc[0]
+    before = doc.tobytes()
+    source = pylopdf.open(stream=one_page_pdf)
+    actions: dict[str, Callable[[], object]] = {
+        "select": lambda: doc.select([1]),
+        "copy": lambda: doc.copy_page(1),
+        "new": doc.new_page,
+        "insert": lambda: doc.insert_pdf(source),
+        "delete": lambda: doc.delete_page(0),
+    }
+    with pytest.raises(pylopdf.PdfError, match="inheritance tree contains a reference cycle"):
+        actions[operation]()
+
+    assert doc.page_count == 2
+    assert doc.tobytes() == before
+    assert good_page.rotation == 0
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Windows symlink creation needs host configuration")
+def test_atomic_save_does_not_follow_replaced_temporary(tmp_path: Path) -> None:
+    target = tmp_path / "output.pdf"
+    target.write_bytes(b"original output")
+    victim = tmp_path / "unrelated.pdf"
+    victim.write_bytes(b"unrelated content")
+
+    def writer(file: BinaryIO) -> None:
+        temporary = next(tmp_path.glob(".pylopdf-*.tmp"))
+        temporary.unlink()
+        temporary.symlink_to(victim)
+        file.write(b"completed PDF")
+
+    with pytest.raises(pylopdf.PdfError, match="temporary output was replaced during writing"):
+        pylopdf._atomic_save_file(target, writer)  # noqa: SLF001
+
+    assert target.read_bytes() == b"original output"
+    assert victim.read_bytes() == b"unrelated content"
+    assert list(tmp_path.glob(".pylopdf-*.tmp")) == []
+
+
+def test_atomic_save_cleans_up_after_descriptor_wrap_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    descriptors: list[int] = []
+
+    def fail_fdopen(descriptor: int, _mode: str) -> BinaryIO:
+        descriptors.append(descriptor)
+        msg = "cannot wrap descriptor"
+        raise OSError(msg)
+
+    monkeypatch.setattr(os, "fdopen", fail_fdopen)
+    with pytest.raises(pylopdf.PdfError, match="failed to save"):
+        pylopdf._atomic_save_file(tmp_path / "output.pdf", lambda _file: None)  # noqa: SLF001
+
+    assert len(descriptors) == 1
+    # Check the portable error code instead of the platform's localized message.
+    with pytest.raises(OSError) as exc_info:  # noqa: PT011
+        os.fstat(descriptors[0])
+    assert exc_info.value.errno == errno.EBADF
+    assert list(tmp_path.glob(".pylopdf-*.tmp")) == []
