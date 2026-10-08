@@ -233,6 +233,48 @@ with strict and NFKC character error rates on licensed Japanese fixtures.
 uv sync --all-extras --group bench && uv run python bench/run.py
 ```
 
+Measure end-to-end Markdown and `words` / `blocks` / `dict` extraction separately:
+
+```bash
+uv sync && uv run python bench/layout.py
+# Save a baseline before optimizing, then compare the candidate checkout:
+uv run python bench/layout.py --output /tmp/layout-baseline.json
+uv run python bench/layout.py --baseline /tmp/layout-baseline.json
+```
+
+The runner writes `bench/results/layout-latest.md` and a JSON sidecar. It uses
+four existing corpus PDFs and synthetic ASCII / Unicode OCR-text documents with
+tables at 1, 8, and 16 pages. Fresh-document timings include opening and closing;
+reused-document timings repeat each task after warmup. Complete output hashes
+must match before reporting a baseline speedup. Use the same environment and
+repetition count for both runs. `--synthetic-only` runs without the corpus, and
+`--repetitions` defaults to five. Fixture generation and output hashing are
+outside the timed region.
+
+Compare rich-content conversion behavior separately:
+
+```bash
+uv sync --group bench-rich && uv run python -m bench.features
+```
+
+The [feature map](bench/FEATURE_MAP.md) describes Markdown policies and review
+criteria for math, Unicode/emoji, images, table spans/alignment, links, reading
+order, and document metadata. The study retains input PDFs and complete outputs
+from five libraries with explicit options, including PyMuPDF4LLM's legacy,
+layout, and HTML table modes. Parsed syntax probes help find losses and changes;
+they do not certify semantic correctness. [Initial findings](bench/FINDINGS.md)
+document concrete differences. OCR and formula-recognition models
+remain separate workloads. Results are written to `bench/results/features-latest.{md,json}`.
+The [optional CPU model study](bench/MODEL_BENCHMARKS.md) adds Docling with
+formula enrichment off/on and Marker in OCR-disabled fast mode on the same
+inputs. It retains structured artifacts and image files alongside Markdown in
+`bench/results/features-models.{md,json}`, with separate run provenance and
+model fingerprints.
+Only Markdown summaries and the compact layout timing/hash baseline are stored
+in Git. Full feature JSON, source copies, raw outputs, model sidecars, images,
+and logs are generated locally and ignored; run the documented commands to
+inspect them.
+
 ## Architecture
 
 ```

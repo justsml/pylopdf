@@ -31,6 +31,23 @@ overview.
 - `uv sync --group bench && uv run python bench/run.py` — run reproducible
   benchmarks. Results are written to `bench/results/latest.md`; publish wins and
   losses together.
+- `uv run python bench/layout.py` — measure all-page Markdown and structured
+  extraction on corpus and synthetic inputs, with fresh and reused Documents.
+  Reports are written separately to `bench/results/layout-latest.{md,json}`.
+  Save a baseline with `--output <path>.json`, then use `--baseline <path>.json`
+  to compare matching inputs and complete outputs in the same environment.
+- `uv sync --group bench-rich && uv run python -m bench.features` — compare
+  rich-content behavior across PDF text and Markdown converters. Preserve the
+  input PDFs, complete outputs, warnings/errors, versions, and options together
+  with `bench/results/features-latest.{md,json}`. `bench/FEATURE_MAP.md` defines
+  coverage and review criteria; syntax counts are observations, not quality scores.
+  Commit Markdown summaries and the compact layout timing/hash baseline only;
+  full feature JSON, copied inputs, raw outputs, sidecars, images, and logs are
+  generated locally and ignored by Git.
+- `bench/MODEL_BENCHMARKS.md` — isolated CPU Docling/Marker setup and rich-content
+  measurements. Retain original lightweight timings and model run provenance
+  separately in `bench/results/features-models.{md,json}`; publish model settings,
+  initialization cost, failures, image assets, and structured artifacts together.
 - `py -3.14t bench/free_threaded.py` — measure independent-document extraction
   without the GIL. Results are written separately to
   `bench/results/free-threaded-latest.md` so regular benchmark runs cannot

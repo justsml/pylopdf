@@ -14,3 +14,8 @@ __pycache__
 
 # Documentation build output
 site/
+
+# Rich benchmark details are generated locally; commit the Markdown summaries.
+/bench/results/feature-outputs/
+/bench/results/features-*.json
+/bench/results/features-*.log
