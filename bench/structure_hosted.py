@@ -110,8 +110,13 @@ class HostedVision:
             "max_tokens": limit,
             "provider": {"max_price": {"prompt": 1, "completion": 4}},
             "messages": [
-                {"role": "user", "content": [{"type": "image_url", "image_url": {"url": data_url}},
-                                          {"type": "text", "text": prompt}]}
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image_url", "image_url": {"url": data_url}},
+                        {"type": "text", "text": prompt},
+                    ],
+                }
             ],
         }
         if self.router:
