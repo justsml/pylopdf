@@ -13,6 +13,9 @@ overview.
 
 ## Working conventions
 
+- Development pull requests for this fork target `justsml/pylopdf`. Push work
+  branches to the `fork` remote. Do not open or update upstream pull requests
+  unless the user explicitly requests it.
 - Open a short-lived branch and pull request for each coherent unit of work.
   `main` is protected: direct pushes are rejected, and merging requires the six
   required status checks. Squash-merge so one merged pull request becomes one
