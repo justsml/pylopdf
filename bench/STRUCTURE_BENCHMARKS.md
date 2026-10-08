@@ -59,6 +59,19 @@ this is an experimental block replacement, not a complete reading-order policy.
 Run one writer at a time. `--rescore` checks input/output hashes and updates
 observations without regenerating or retiming outputs.
 
+After normalized YOLO predictions exist, test the combined source-preserving path:
+
+```bash
+uv run python -m bench.structure --adapter hybrid-html --adapter hybrid-bullets \
+  --repetitions 3
+```
+
+It prefers native vector cells and spans, uses the experimental header-guided
+record fallback, gates remaining geometry candidates with normalized YOLO regions,
+and performs native OCR only when the page has no extracted words. Detector cost
+is reused and excluded from these adapter timings. Inferred headers remain
+unverified, and partial/mixed text layers do not trigger automatic OCR repair.
+
 The retained Docling/Marker adapters verify input and output hashes from the
 earlier CPU study, require single-page inputs, and carry original timing and
 provenance. Replaying their artifacts is not a new performance measurement.
@@ -85,6 +98,13 @@ adapters. They do not support the new derivatives without a new CPU conversion.
 - General Qwen2.5-VL-3B variants test image/text and source-ID patch responses.
   Patches reject invented or duplicated IDs, ragged matrices, and invalid spans.
   Source ID validity cannot prove correct semantic cell/header relationships.
+- Row crops split dense regions between physical rows at 12 rows or 160 words,
+  whichever comes first, with at most 16 crops. A single oversized row cannot be
+  split by this policy. Row patch variants validate all source IDs and reject
+  truncation before appending same-width grids. They do not infer spans across
+  regions or join header semantics. Crop responses and failed patches are retained.
+- Fence repair removes only one whole-response HTML/Markdown fence. It reuses
+  inference and cannot repair incorrect cells or a title treated as a table row.
 - Native OCR runs on white at 150 dpi, uses four threads, and skips existing text.
   Its geometry fallback retains recognition errors rather than silently replacing
   them with the synthetic reference.
@@ -120,6 +140,23 @@ have separate generated values and layouts, but share template families: this is
 a feasibility check, not a template-family holdout or generalization claim.
 The original 28 study inputs never enter training. Compare quantized base and
 adapted models under the same prompt/quantization before attributing a gain to training.
+An adapter checkpoint is saved every eight steps. The measured first attempt
+stopped after nine completed steps with NVIDIA Xid 79/154; its losses, responses,
+and kernel log are retained separately. After an external OS reboot, the fixed
+64-step pilot restarted from the same seed and completed. This infrastructure
+failure is not scored as model quality. The pilot does not establish GPU stability.
+
+The tested checkpoints are pinned in the runner:
+
+| Checkpoint | Revision |
+| --- | --- |
+| YOLO26m-DocLayNet | `49b97586dbd3bdae169e8f5e165710d0facf5f1e` |
+| olmOCR-2-7B-1025 | `e52d6f090b7a9007afffbbd6ce510876222fea93` |
+| Qwen2.5-VL-3B-Instruct | `66285546d2b821cf421d4f5eb2576359d3770cd3` |
+
+The local `structure-artifacts/model-provenance.json` retains file sizes and SHA-256
+hashes, including the loaded weight shards. Findings and cohort denominators are
+reported separately from the complete per-case Markdown report.
 
 All PDFs, PNGs, prompts, full responses, traces, model weights, and JSON details
 stay outside Git. Commit the protocol, code, tests, and Markdown findings only.

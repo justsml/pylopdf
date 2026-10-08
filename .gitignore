@@ -24,3 +24,5 @@ site/
 /bench/results/structure-artifacts/
 /bench/results/structure-*.json
 /bench/results/structure-*.log
+/.env.remote-hosts
+/.env.remote-hosts.swp

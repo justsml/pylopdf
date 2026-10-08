@@ -12,7 +12,7 @@ from typing import Any
 
 import pylopdf
 from bench.feature_cases import page_pdf, text_op
-from bench.structure import ARTIFACTS, PATCH_PROMPT, QWEN_MODEL, write_json
+from bench.structure import ARTIFACTS, PATCH_PROMPT, QWEN_MODEL, QWEN_REVISION, write_json
 from bench.structure_core import score_tables, validate_patch
 
 _TRAIN_COUNT = 36
@@ -181,8 +181,9 @@ def main() -> None:
             bnb_4bit_compute_dtype=torch.bfloat16,
             bnb_4bit_use_double_quant=True,
         ),
+        revision=QWEN_REVISION,
     )
-    processor = transformers.AutoProcessor.from_pretrained(QWEN_MODEL)
+    processor = transformers.AutoProcessor.from_pretrained(QWEN_MODEL, revision=QWEN_REVISION)
     validation = [example for example in examples if example["split"] == "validation"]
     before = evaluate(model, processor, validation, "before")
     model = peft.prepare_model_for_kbit_training(model)
@@ -226,12 +227,15 @@ def main() -> None:
                 "peak_cuda_bytes": torch.cuda.max_memory_allocated(),
             },
         )
+        if (step + 1) % 8 == 0:
+            model.save_pretrained(ARTIFACTS / "training/checkpoint")
     seconds = time.perf_counter() - start
     model.save_pretrained(ARTIFACTS / "training/adapter")
     model.config.use_cache = True
     after = evaluate(model, processor, validation, "after")
     report = {
         "model": QWEN_MODEL,
+        "model_revision": QWEN_REVISION,
         "steps": args.steps,
         "training_examples": len(training),
         "validation_examples": len(validation),

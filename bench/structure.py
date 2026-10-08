@@ -8,6 +8,7 @@ import importlib
 import json
 import platform
 import re
+import shutil
 import statistics
 import subprocess
 import time
@@ -15,14 +16,15 @@ import traceback
 from collections import Counter
 from datetime import datetime, timezone
 from importlib import metadata
+from itertools import pairwise
 from typing import TYPE_CHECKING, Any
 
 import pylopdf
 from bench.feature_cases import ROOT
 from bench.structure_cases import RECORD_REFERENCES, build_structure_cases
 from bench.structure_core import (
-    HtmlTables,
     geometry_tables,
+    markdown_spans,
     markdown_tables,
     render_tables,
     score_records,
@@ -40,7 +42,12 @@ ARTIFACTS = ROOT / "bench/results/structure-artifacts"
 REPORT = ROOT / "bench/results/structure-latest.json"
 MODEL = "allenai/olmOCR-2-7B-1025"
 QWEN_MODEL = "Qwen/Qwen2.5-VL-3B-Instruct"
+MODEL_REVISION = "e52d6f090b7a9007afffbbd6ce510876222fea93"
+QWEN_REVISION = "66285546d2b821cf421d4f5eb2576359d3770cd3"
+YOLO_REVISION = "49b97586dbd3bdae169e8f5e165710d0facf5f1e"
 _MAX_CROPS = 16
+_ROWS_PER_CROP = 12
+_WORDS_PER_CROP = 160
 PATCH_PROMPT = (
     "Recover table structure from this page image and the positioned source words. Return ONLY JSON: "
     '{"tables":[{"rows":[[["p0w1"],["p0w2"]],[["p0w3"],[]]],"spans":[]}]} . '
@@ -129,8 +136,14 @@ class Engines:
         self.processor: Any = None
         self.model_path = None
         self.ocr = None
+        self.hosted: Any = None
         start = time.perf_counter()
-        if adapter.startswith("ocr"):
+        if "hosted" in adapter:
+            from bench.structure_hosted import HostedVision  # noqa: PLC0415
+
+            self.hosted = HostedVision(ROOT, router="jev" in adapter)
+            self.model_path = self.hosted.model
+        elif adapter.startswith(("ocr", "hybrid")):
             model_root = ROOT / "models/pylopdf-ocr-models/src/pylopdf_ocr_models"
             self.ocr = pylopdf.OcrEngine(
                 model_root / "PP-OCRv6_det_small.rten",
@@ -140,12 +153,15 @@ class Engines:
             )
         elif adapter.startswith("yolo"):
             hub = importlib.import_module("huggingface_hub")
-            self.model_path = hub.hf_hub_download("hantian/yolo-doclaynet", "yolo26m-doclaynet.pt")
+            self.model_path = hub.hf_hub_download(
+                "hantian/yolo-doclaynet", "yolo26m-doclaynet.pt", revision=YOLO_REVISION
+            )
             self.model = importlib.import_module("ultralytics").YOLO(self.model_path)
         elif adapter.startswith(("olmocr", "qwen")):
             transformers = importlib.import_module("transformers")
             torch = importlib.import_module("torch")
             self.model_path = QWEN_MODEL if adapter.startswith("qwen") else MODEL
+            revision = QWEN_REVISION if adapter.startswith("qwen") else MODEL_REVISION
             quantization = (
                 transformers.BitsAndBytesConfig(
                     load_in_4bit=True,
@@ -162,8 +178,9 @@ class Engines:
                 attn_implementation="sdpa",
                 device_map=device,
                 quantization_config=quantization,
+                revision=revision,
             ).eval()
-            self.processor = transformers.AutoProcessor.from_pretrained(self.model_path)
+            self.processor = transformers.AutoProcessor.from_pretrained(self.model_path, revision=revision)
             if "lora" in adapter:
                 self.model = (
                     importlib.import_module("peft")
@@ -203,6 +220,8 @@ class Engines:
 
     def generate(self, image: Any, prompt: str, limit: int) -> tuple[str, dict[str, Any]]:  # noqa: ANN401
         """Use greedy local decoding and report whether output hit its token boundary."""
+        if self.hosted is not None:
+            return self.hosted.generate(image, prompt, limit)
         torch = importlib.import_module("torch")
         messages = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": prompt}]}]
         text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
@@ -222,8 +241,41 @@ class Engines:
 def run_adapter(bundle: dict[str, Any], engine: Engines, limit: int) -> dict[str, Any]:  # noqa: C901, PLR0911, PLR0912
     """Keep each intervention separate and retain rejected raw patches."""
     name = engine.adapter
+    if name.startswith("hybrid"):
+        from bench.structure_hybrid import recover  # noqa: PLC0415
+
+        if engine.ocr is None:
+            msg = "hybrid engine was initialized without OCR"
+            raise RuntimeError(msg)
+        return recover(bundle, ARTIFACTS / bundle["name"], engine.ocr, bullets=name.endswith("bullets"))
     directory = ARTIFACTS / bundle["name"]
     words = bundle["words"]
+    if "row-patch" in name:
+        return run_row_patches(bundle, engine, limit)
+    if name.startswith("repair"):
+        source_adapter = name.removeprefix("repair-")
+        source_result = next(
+            row
+            for row in json.loads(REPORT.read_text())["results"]
+            if row["case"] == bundle["name"] and row["adapter"] == source_adapter
+        )
+        text = (directory / f"{source_adapter}.md").read_text()
+        if (
+            source_result["sha256"] != bundle["sha256"]
+            or source_result["output_sha256"] != hashlib.sha256(text.encode()).hexdigest()
+        ):
+            msg = "repair source hash differs"
+            raise ValueError(msg)
+        fenced = re.fullmatch(r"\s*```(?:html|markdown|md)?\s*\n(.*?)\n```\s*", text, flags=re.DOTALL)
+        repaired = fenced.group(1) if fenced else text
+        return {
+            "markdown": repaired,
+            "tables": markdown_tables(repaired),
+            "repaired_fence": bool(fenced),
+            "source_adapter": source_adapter,
+            "inference_reused": True,
+            "inference_seconds": source_result["median_seconds"],
+        }
     if name.startswith("retained"):
         original = json.loads((ROOT / "bench/results/features-models.json").read_text())
         case = next(case for case in original["cases"] if case["name"] == bundle["name"])
@@ -249,6 +301,8 @@ def run_adapter(bundle: dict[str, Any], engine: Engines, limit: int) -> dict[str
                 {"id": f"p0w{i}", "text": word[4], "bbox": list(word[:4]), "logical_bbox": list(word[:4])}
                 for i, word in enumerate(collected)
             ]
+            if not recognized:
+                ocr_words = words
             payload = {"tables": [{"rows": table} for table in geometry_tables(ocr_words, wrapped=True)]}
             matrices, consumed = validate_patch(payload, ocr_words)
             text = (
@@ -261,7 +315,7 @@ def run_adapter(bundle: dict[str, Any], engine: Engines, limit: int) -> dict[str
             "markdown": text,
             "tables": matrices,
             "recognized_words": len(recognized),
-            "ocr_policy": "150 dpi, skip_existing=True, four inference threads; geometry follows OCR display boxes",
+            "ocr_policy": "150 dpi, skip_existing=True, four threads; retained text uses dominant orientation",
         }
     if name in {"pylopdf", "pylopdf-text"}:
         text = bundle["baseline" if name == "pylopdf" else "text_tables"]
@@ -401,6 +455,8 @@ def run_crops(bundle: dict[str, Any], engine: Engines, image: Any, prompt: str, 
     else:
         regions = json.loads((directory / "yolo-geometry-detections.json").read_text())
     regions = [region for region in regions if region["label"].lower() == "table"]
+    if "row" in engine.adapter:
+        regions = split_row_regions(regions, bundle["words"])
     if not regions:
         raw, details = engine.generate(image, prompt, limit)
         (directory / f"{engine.adapter}-raw.txt").write_text(raw)
@@ -415,11 +471,12 @@ def run_crops(bundle: dict[str, Any], engine: Engines, image: Any, prompt: str, 
     outputs = []
     for index, region in enumerate(regions):
         x0, y0, x1, y1 = region["bbox"]
+        margin_y = 0 if region.get("row_strip") else 8
         pixel_box = (
             max(0, x0 - 8) * image.width / bundle["width"],
-            max(0, y0 - 8) * image.height / bundle["height"],
+            max(0, y0 - margin_y) * image.height / bundle["height"],
             min(bundle["width"], x1 + 8) * image.width / bundle["width"],
-            min(bundle["height"], y1 + 8) * image.height / bundle["height"],
+            min(bundle["height"], y1 + margin_y) * image.height / bundle["height"],
         )
         crop = image.crop(pixel_box)
         scale = 1288 / max(crop.size)
@@ -443,9 +500,129 @@ def run_crops(bundle: dict[str, Any], engine: Engines, image: Any, prompt: str, 
         "tables": matrices,
         "crop_count": len(regions),
         "crop_details": outputs,
+        "regions": regions,
         "truncated": any(output["truncated"] for output in outputs),
         "crop_policy": "replace centroid-covered words; append outside source in extraction order",
         "detection_cost": "reused YOLO predictions or geometry; excludes YOLO inference",
+    }
+
+
+def split_row_regions(regions: list[dict[str, Any]], words: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Bound recognition output by cutting display-horizontal tables into physical-row strips."""
+    result = []
+    for region in regions:
+        x0, y0, x1, y1 = region["bbox"]
+        selected = [
+            word
+            for word in words
+            if x0 <= (word["bbox"][0] + word["bbox"][2]) / 2 <= x1
+            and y0 <= (word["bbox"][1] + word["bbox"][3]) / 2 <= y1
+        ]
+        if not selected:
+            result.append(region)
+            continue
+        height = statistics.median(word["bbox"][3] - word["bbox"][1] for word in selected)
+        rows: list[list[dict[str, Any]]] = []
+        for word in sorted(selected, key=lambda item: item["bbox"][1]):
+            if not rows or abs(word["bbox"][1] - rows[-1][0]["bbox"][1]) > height * 0.45:
+                rows.append([])
+            rows[-1].append(word)
+        cuts = []
+        start = 0
+        count = 0
+        for index, row in enumerate(rows):
+            if index > start and (index - start >= _ROWS_PER_CROP or count + len(row) > _WORDS_PER_CROP):
+                cuts.append(
+                    (max(word["bbox"][3] for word in rows[index - 1]) + min(word["bbox"][1] for word in row)) / 2
+                )
+                start, count = index, 0
+            count += len(row)
+        limits = [y0, *cuts, y1]
+        result.extend({**region, "bbox": [x0, top, x1, bottom], "row_strip": True} for top, bottom in pairwise(limits))
+    return result
+
+
+def run_row_patches(bundle: dict[str, Any], engine: Engines, limit: int) -> dict[str, Any]:
+    """Validate bounded region patches before appending any rows to completed output."""
+    directory = ARTIFACTS / bundle["name"]
+    predictions = json.loads((directory / "yolo-geometry-detections.json").read_text())
+    regions = split_row_regions(
+        [region for region in predictions if region["label"].lower() == "table"], bundle["words"]
+    )
+    if not regions or len(regions) > _MAX_CROPS:
+        msg = "row patch requires 1..16 detected table regions"
+        raise ValueError(msg)
+    image = importlib.import_module("PIL.Image").open(directory / "page.png").convert("RGB")
+    matrices = []
+    consumed: set[str] = set()
+    details = []
+    for index, region in enumerate(regions):
+        x0, y0, x1, y1 = region["bbox"]
+        selected = [
+            word
+            for word in bundle["words"]
+            if x0 <= (word["bbox"][0] + word["bbox"][2]) / 2 <= x1
+            and y0 <= (word["bbox"][1] + word["bbox"][3]) / 2 <= y1
+        ]
+        if not selected:
+            continue
+        crop = image.crop(
+            (
+                x0 * image.width / bundle["width"],
+                y0 * image.height / bundle["height"],
+                x1 * image.width / bundle["width"],
+                y1 * image.height / bundle["height"],
+            )
+        )
+        scale = 1288 / max(crop.size)
+        crop = crop.resize((round(crop.width * scale), round(crop.height * scale)))
+        crop.save(directory / f"{engine.adapter}-crop-{index}.png")
+        source = {
+            "width": round(x1 - x0, 1),
+            "height": round(y1 - y0, 1),
+            "word_format": ["id", "x0", "y0", "x1", "y1", "text"],
+            "words": [
+                [
+                    word["id"],
+                    *[round(value - (x0 if axis % 2 == 0 else y0), 1) for axis, value in enumerate(word["bbox"])],
+                    word["text"],
+                ]
+                for word in selected
+            ],
+        }
+        prompt = PATCH_PROMPT + json.dumps(source, ensure_ascii=False, separators=(",", ":"))
+        (directory / f"{engine.adapter}-crop-{index}-prompt.txt").write_text(prompt)
+        raw, generation = engine.generate(crop, prompt, limit)
+        (directory / f"{engine.adapter}-crop-{index}-raw.txt").write_text(raw)
+        if generation["truncated"]:
+            msg = "region patch exhausted its output token boundary"
+            raise ValueError(msg)
+        cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
+        payload = json.loads(cleaned)
+        tables, used = validate_patch(payload, selected)
+        if consumed & used:
+            msg = "source ID duplicated across region patches"
+            raise ValueError(msg)
+        matrices.extend(tables)
+        consumed.update(used)
+        details.append(generation)
+    # Only join grids whose width agrees. No cross-region span inference is attempted.
+    widths = {len(row) for table in matrices for row in table}
+    if len(widths) == 1:
+        matrices = [[row for table in matrices for row in table]]
+    text = (
+        render_tables(matrices)
+        + "\n\n"
+        + " ".join(word["text"] for word in bundle["words"] if word["id"] not in consumed)
+    )
+    return {
+        "markdown": text,
+        "tables": matrices,
+        "source_ids_used": len(consumed),
+        "source_ids_total": len(bundle["words"]),
+        "crop_details": details,
+        "crop_count": len(regions),
+        "assembly": "append validated same-width grids; preserve unassigned words; no cross-region spans",
     }
 
 
@@ -485,8 +662,39 @@ def format_report(report: dict[str, Any]) -> str:
             f"| {result['case']} | {result['adapter']} | {exact} | {cells} | {relations} | "
             f"{record_cells} | {result.get('median_seconds', 0):.3f} | {status} |"
         )
-    lines.extend(["", "## Run provenance", "", "```json", json.dumps(report["metadata"], indent=2), "```", ""])
+    provenance = {key: value for key, value in report["metadata"].items() if key != "runs"}
+    lines.extend(
+        [
+            "",
+            "## Run provenance",
+            "",
+            "```json",
+            json.dumps(provenance, indent=2),
+            "```",
+            "",
+            "| Run | Adapter | Initialization seconds | Repetitions | Device | Model |",
+            "| --- | --- | ---: | ---: | --- | --- |",
+        ]
+    )
+    for index, run in enumerate(report["metadata"]["runs"]):
+        lines.append(
+            f"| {index} | {run['adapter']} | {run['initialization_seconds']:.3f} | "
+            f"{run['repetitions']} | {run['device']} | {run.get('model') or 'none'} |"
+        )
+    lines.append(
+        "\nFull dependency versions, per-result run indexes, code hashes, and retained-run provenance are in JSON.\n"
+    )
     return "\n".join(lines)
+
+
+def retain_attempt(bundle: dict[str, Any], adapter: str, repetition: int, started_ns: int) -> None:
+    """Keep each response/prompt separately, including attempts rejected by validation."""
+    directory = ARTIFACTS / bundle["name"]
+    destination = directory / "repetitions" / adapter / str(repetition)
+    destination.mkdir(parents=True, exist_ok=True)
+    for path in directory.glob(f"{adapter}-*.txt"):
+        if path.stat().st_mtime_ns >= started_ns:
+            shutil.copyfile(path, destination / path.name)
 
 
 def rescore(report: dict[str, Any]) -> None:
@@ -510,9 +718,7 @@ def rescore(report: dict[str, Any]) -> None:
         result["literal_checks"] = {value: value in visible for value in bundle["expected_text"]}
         result["source_agreement"] = source_agreement(text, bundle["words"])
         result["record_checks"] = score_records(result["output"]["tables"], RECORD_REFERENCES.get(bundle["name"], {}))
-        span_parser = HtmlTables()
-        span_parser.feed(text)
-        result["merged_spans_exact"] = list(map(list, span_parser.spans)) == bundle["expected_spans"]
+        result["merged_spans_exact"] = markdown_spans(text) == bundle["expected_spans"]
     report["metadata"]["observation_code_sha256"] = hashlib.sha256(
         (ROOT / "bench/structure_core.py").read_bytes(),
     ).hexdigest()
@@ -522,6 +728,7 @@ def rescore(report: dict[str, Any]) -> None:
 
 def main() -> None:  # noqa: C901
     """Checkpoint every case so model failures cannot discard completed experiments."""
+    global REPORT  # noqa: PLW0603 - one CLI-selected report for dependent replay adapters.
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepare", action="store_true")
     parser.add_argument(
@@ -536,10 +743,14 @@ def main() -> None:  # noqa: C901
             "geometry-wrapped-bullets",
             "native-bullets",
             "native-header-bullets",
+            "hybrid-html",
+            "hybrid-bullets",
             "ocr-geometry-wrapped",
             "retained-docling",
             "retained-docling-formulas",
             "retained-marker-fast",
+            "repair-qwen-image",
+            "repair-qwen-text",
             "yolo-geometry",
             "yolo-geometry-wrapped",
             "yolo-normalized-geometry-wrapped",
@@ -551,6 +762,7 @@ def main() -> None:  # noqa: C901
             "olmocr-normalized",
             "olmocr-yolo-crop",
             "olmocr-geometry-crop",
+            "olmocr-row-crop",
             "qwen-image",
             "qwen-text",
             "qwen-patch",
@@ -558,6 +770,13 @@ def main() -> None:  # noqa: C901
             "qwen-compact-patch",
             "qwen-4bit-compact-patch",
             "qwen-lora-4bit-compact-patch",
+            "qwen-4bit-compact-row-patch",
+            "qwen-lora-4bit-compact-row-patch",
+            "qwen-hosted-image",
+            "qwen-hosted-compact-text",
+            "qwen-hosted-compact-patch",
+            "qwen-jev-hosted-compact-text",
+            "qwen-jev-hosted-compact-patch",
         ],
     )
     parser.add_argument("--case", action="append")
@@ -566,7 +785,10 @@ def main() -> None:  # noqa: C901
     parser.add_argument("--max-tokens", type=int, default=4096)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--rescore", action="store_true")
+    parser.add_argument("--report", default=str(REPORT))
     args = parser.parse_args()
+    REPORT = ROOT / args.report
+    REPORT.parent.mkdir(parents=True, exist_ok=True)
     if args.repetitions < 1 or args.max_tokens < 1:
         parser.error("repetitions and max-tokens must be positive")
     bundles: list[dict[str, Any]] = prepare() if args.prepare else json.loads((ARTIFACTS / "manifest.json").read_text())
@@ -630,14 +852,21 @@ def main() -> None:  # noqa: C901
             try:
                 outputs = []
                 timings = []
-                for _ in range(args.repetitions):
+                for repetition in range(args.repetitions):
                     tick = time.perf_counter()
-                    outputs.append(run_adapter(bundle, engine, args.max_tokens))
-                    timings.append(time.perf_counter() - tick)
+                    started_ns = time.time_ns()
+                    try:
+                        output = run_adapter(bundle, engine, args.max_tokens)
+                        call_seconds = time.perf_counter() - tick
+                        outputs.append(output)
+                        attempt = ARTIFACTS / bundle["name"] / "repetitions" / adapter / str(repetition)
+                        attempt.mkdir(parents=True, exist_ok=True)
+                        write_json(attempt / "output.json", output)
+                    finally:
+                        retain_attempt(bundle, adapter, repetition, started_ns)
+                    timings.append(call_seconds)
                 output = outputs[0]
                 visible = visible_text(output["markdown"])
-                span_parser = HtmlTables()
-                span_parser.feed(output["markdown"])
                 (ARTIFACTS / bundle["name"] / f"{adapter}.md").write_text(output["markdown"])
                 result.update(
                     {
@@ -648,7 +877,7 @@ def main() -> None:  # noqa: C901
                         "literal_checks": {text: text in visible for text in bundle["expected_text"]},
                         "source_agreement": source_agreement(output["markdown"], bundle["words"]),
                         "record_checks": score_records(output["tables"], RECORD_REFERENCES.get(bundle["name"], {})),
-                        "merged_spans_exact": list(map(list, span_parser.spans)) == bundle["expected_spans"],
+                        "merged_spans_exact": markdown_spans(output["markdown"]) == bundle["expected_spans"],
                         "output_sha256": hashlib.sha256(output["markdown"].encode()).hexdigest(),
                         "output": {key: value for key, value in output.items() if key != "markdown"},
                     }
@@ -676,7 +905,7 @@ def main() -> None:  # noqa: C901
             REPORT.with_suffix(".md").write_text(format_report(report))
             print(f"{adapter}: {bundle['name']}: {result.get('score', result.get('error'))}", flush=True)
         del engine
-        if adapter.startswith(("olmocr", "yolo", "qwen")):
+        if "hosted" not in adapter and adapter.startswith(("olmocr", "yolo", "qwen")):
             importlib.import_module("torch").cuda.empty_cache()
 
 

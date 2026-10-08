@@ -91,6 +91,14 @@ def markdown_tables(text: str) -> list[list[list[str]]]:
     return tables + parser.tables
 
 
+def markdown_spans(text: str) -> list[list[int]]:
+    """Observe merged cells in rendered HTML blocks, excluding fenced code."""
+    tokens = import_module("markdown_it").MarkdownIt("commonmark").enable("table").parse(text)
+    parser = HtmlTables()
+    parser.feed("\n".join(token.content for token in tokens if token.type == "html_block"))
+    return list(map(list, parser.spans))
+
+
 def score_records(tables: list[list[list[str]]], references: dict[str, dict[int, str]]) -> dict[str, Any]:
     """Check independently annotated source records at their logical column positions."""
     details = {}
