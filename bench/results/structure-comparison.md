@@ -11,7 +11,7 @@ Truncated counts are lower bounds: older failed calls can lack generation metada
 ## structure-latest
 
 Source report run: 2026-10-08T03:18:26.318705+00:00
-Snapshot SHA-256: `4b3dc67d04bbe36ac77dde8c782b2214b10d1d9447a661577c22914fe63cea4a`.
+Snapshot SHA-256: `e443782cffb2123b2f542d3e99150d7b3286c35a515d353883efd6eb972b760c`.
 
 | Adapter | Calls | Unsupported | Positive exact | Negative exact | Cells | Relation recall | Precision | Corpus cells | Errors | Truncated |
 | --- | ---: | ---: | --- | --- | --- | --- | --- | --- | ---: | ---: |
@@ -52,7 +52,7 @@ Snapshot SHA-256: `4b3dc67d04bbe36ac77dde8c782b2214b10d1d9447a661577c22914fe63ce
 ## structure-hosted
 
 Source report run: 2026-10-08T04:42:19.263122+00:00
-Snapshot SHA-256: `c6ec01020a21efc45fb3e8525300a25ca8245ec44d47386a825fc028973bf3d2`.
+Snapshot SHA-256: `f8876273d14fc47236593bedd3197fff303505f8e97522d7659ab649d68e8429`.
 
 | Adapter | Calls | Unsupported | Positive exact | Negative exact | Cells | Relation recall | Precision | Corpus cells | Errors | Truncated |
 | --- | ---: | ---: | --- | --- | --- | --- | --- | --- | ---: | ---: |
@@ -69,8 +69,8 @@ Snapshot SHA-256: `c6ec01020a21efc45fb3e8525300a25ca8245ec44d47386a825fc028973bf
 
 ## structure-remote48
 
-Source report run: 2026-10-08T04:51:00.292628+00:00
-Snapshot SHA-256: `c2f6bd6c224df7c8e08d323457bf71dfd37224fb195cff17ec2b2dcc94615408`.
+Source report run: 2026-10-08T04:57:08.275703+00:00
+Snapshot SHA-256: `ad80f854a201f3fa686654ffd82b3c02aa0ad30055707473bc732d08a1e44108`.
 
 | Adapter | Calls | Unsupported | Positive exact | Negative exact | Cells | Relation recall | Precision | Corpus cells | Errors | Truncated |
 | --- | ---: | ---: | --- | --- | --- | --- | --- | --- | ---: | ---: |
@@ -81,10 +81,32 @@ Snapshot SHA-256: `c2f6bd6c224df7c8e08d323457bf71dfd37224fb195cff17ec2b2dcc94615
 
 ## structure-remote48-long
 
-Source report run: 2026-10-08T04:51:00.292628+00:00
-Snapshot SHA-256: `3138c2d400d91afe1c8fb1e42bfbac3359ea5aebf23ff7c42a4a1ff69ec1a6d7`.
+Source report run: 2026-10-08T05:10:56.667603+00:00
+Snapshot SHA-256: `2401ae80f2031180015166ece1a20e08c8c393e3a4e4eacc23163d53ba5d48d5`.
 
 | Adapter | Calls | Unsupported | Positive exact | Negative exact | Cells | Relation recall | Precision | Corpus cells | Errors | Truncated |
 | --- | ---: | ---: | --- | --- | --- | --- | --- | --- | ---: | ---: |
 | olmocr-image | 2 | 0 | — | — | — | — | — | 0/35 | 0 | 1 |
+
+## structure-remote-patches
+
+Source report run: 2026-10-08T05:26:02.201730+00:00
+Snapshot SHA-256: `2fa88c9fef1889db957f0f9201fdac740193813d31313049f6a47120638a0cf2`.
+
+| Adapter | Calls | Unsupported | Positive exact | Negative exact | Cells | Relation recall | Precision | Corpus cells | Errors | Truncated |
+| --- | ---: | ---: | --- | --- | --- | --- | --- | --- | ---: | ---: |
+| qwen-compact-patch | 7 | 0 | 0/4 | 0/1 | 0/39 | 0/53 | — | 0/35 | 7 | 1 |
+| qwen-4bit-compact-patch | 17 | 0 | 0/9 | 0/6 | 0/83 | 0/111 | — | 0/35 | 17 | 2 |
+| qwen-lora-4bit-compact-patch | 17 | 0 | 0/9 | 2/6 | 1/83 | 14/111 | 14/75 | 0/35 | 7 | 1 |
+| qwen-4bit-compact-row-patch | 2 | 0 | — | — | — | — | — | 0/35 | 2 | 0 |
+| qwen-lora-4bit-compact-row-patch | 2 | 0 | — | — | — | — | — | 0/35 | 2 | 0 |
+
+## structure-remote-highres
+
+Source report run: 2026-10-08T06:01:45.480431+00:00
+Snapshot SHA-256: `32b69df4ba2ece4ebb2fce2682e5e9d89e79369455ea7e59ef4195c670014c7b`.
+
+| Adapter | Calls | Unsupported | Positive exact | Negative exact | Cells | Relation recall | Precision | Corpus cells | Errors | Truncated |
+| --- | ---: | ---: | --- | --- | --- | --- | --- | --- | ---: | ---: |
+| olmocr-highres-image | 1 | 0 | — | — | — | — | — | 0/12 | 0 | 1 |
 

@@ -218,8 +218,24 @@ The provenance device is the requested backend; native geometry/OCR and replay/r
   "python": "3.14.7",
   "source_commit": "aba57936bc4109bf846d96357012f5cb438a5225",
   "remote_spend_authorized_usd": 15,
-  "remote_spend_usd": 0,
-  "observation_code_sha256": "5a1f588ac88fc76515aaa9253d93e1b6a249a4311eedfcd4ffc2979b30d665e3"
+  "remote_spend_usd": 1.024262108,
+  "observation_code_sha256": "5a1f588ac88fc76515aaa9253d93e1b6a249a4311eedfcd4ffc2979b30d665e3",
+  "spend_scope": "Shared whole-study total, including API and rental; do not add totals across reports",
+  "remote_cleanup_verified": true,
+  "spend_breakdown": {
+    "reported_at": "2026-10-08T06:16:29.886431+00:00",
+    "rental_provider_reported_usd": 0.684,
+    "rental_provider_query_at": 1791440003.470863,
+    "api_provider_reported_usd": 0.340262108,
+    "api_requests": 138,
+    "unsettled_api_requests": 0,
+    "combined_provider_reported_usd": 1.024262108,
+    "authorized_cap_usd": 15,
+    "billing_note": "Provider-reported snapshot after destruction; rental rows are rounded to three decimals",
+    "instance_id": 54777034,
+    "instance_removed": true,
+    "archive_sha256": "31a21270168baa6d283aaea4c40ea2aa2b1ea227d798a9a0657a4f66c047c825"
+  }
 }
 ```
 

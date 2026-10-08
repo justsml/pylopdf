@@ -126,21 +126,55 @@ corpus cells. Senate finished with 3,182 output tokens in 144.66 seconds; NICS u
 the complete 16,384-token boundary in 745.28 seconds and produced no parsed table.
 More output capacity alone therefore did not fix these dense inputs.
 
-The matched remote base/LoRA study-input comparison and a fresh 2,048-pixel NICS
-image control remain in progress. The latter keeps the original 4,096-token output
-boundary to distinguish visual detail from output length. The final recommendation
-on training and resolution requires those results. The local GPU coordinator
-was stopped and disabled at the user's instruction; all remaining GPU work is
-on the rented 48 GiB RTX A6000.
+On the matched 17-input remote study cohort, the NF4 base failed all 17 calls.
+The adapter reduced rejected calls to seven, but still recovered 0/9 exact positive
+grids, rejected tables correctly on only 2/6 negative controls, and retained 0/35
+checked corpus cells. Only 1/83 synthetic cells matched their exact grid positions.
+The baseline and adapted row-patch variants both failed on both dense corpus pages.
+The generated-page validation win therefore did not generalize to this study's
+layouts. Wider training needs diverse independently labeled documents and a
+template-family holdout; this pilot does not justify a production trained converter.
+
+The fresh 2,048-by-1,243-pixel NICS image increased the model input from 1,418 to
+3,342 tokens. At the original 4,096-token output boundary it still truncated,
+produced no parsed table, and recovered 0/12 checked cells. More image detail alone
+did not solve this example under the tested settings. The output-budget and
+resolution controls are separate interventions, not a combined best-case run.
+
+The local GPU coordinator was stopped and disabled at the user's instruction.
+All remaining GPU work ran on the remote A6000. The remote jobs are complete,
+the full artifact archive was downloaded and hash-verified, and the instance was
+destroyed. The provider's instance-specific endpoint subsequently returned null;
+the temporary SSH key pair was removed.
 
 ## Costs and implementation decision
 
 The completed hosted controls made 138 requests for provider-reported charges
-of $0.340262108, with no unsettled reservations. Rental charges and destruction
-verification will be recorded after remote artifact collection. The user's total
-remote spending cap is $15. Model initialization, prepared native replays, reused
+of $0.340262108, with no unsettled reservations. The provider's post-destruction
+rental snapshot reports $0.684: $0.630 GPU and $0.054 storage, with transfer rows
+rounded to $0.000. Combined reported spend is **$1.024262108 (about $1.02)** against
+the user's $15 cap. Rental rows are rounded to three decimals; this is a billing
+snapshot rather than a promise about any later invoice adjustment. The rental
+watchdog was extended from two to three hours within that cap, and collection
+finished before the original two-hour deadline.
+
+Model initialization, prepared native replays, reused
 detector inference, API latency, and GPU generation are different cost scopes;
 their elapsed times do not support a cross-tool throughput ranking.
+
+All 28 original PDF, screenshot, and positioned-word bundle hashes match across
+the local and remote workers. The 28 downloaded model/tokenizer file hashes also
+match, and all 25 successful remote output hashes were verified before rescoring.
+The original remote archive is retained with SHA-256
+`31a21270168baa6d283aaea4c40ea2aa2b1ea227d798a9a0657a4f66c047c825`.
+Final reports remove inherited parent-run entries and retain the original archived
+report hashes and run indexes. No model response was regenerated or retimed for
+that provenance cleanup. CPU header-retention reruns are separately identified.
+
+Validation: 31 benchmark tests, Ruff checks/format, and mypy on 48 source files
+passed with local GPU inference disabled. Full native CI gates accompany the fork
+pull request; model weights, trained adapters, full JSON, PDFs, images, and logs
+remain ignored local artifacts rather than additions to the library wheel.
 
 For an implementation, start with native structure plus conservative detected
 geometry and a record-bullet fallback. Retain HTML for known merged cells and
