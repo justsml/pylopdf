@@ -5,6 +5,7 @@ import urllib.error
 from email.message import Message
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 from bench import structure
@@ -46,10 +47,30 @@ def test_summary_keeps_failed_calls_in_reference_denominators() -> None:
     )
     assert totals["unsupported"] == 1
     assert totals["positive_total"] == totals["errors"] == 0
+    totals = summarize([{"case": "table", "adapter": "retained-docling", "error": "StopIteration: "}], reference)
+    assert totals["unsupported"] == 1
+    assert totals["positive_total"] == 0
 
 
 def source_words() -> list[dict[str, Any]]:
     return [{"id": "a", "text": "Heading"}, {"id": "b", "text": "42.00"}]
+
+
+def test_failed_patch_retains_generation_metadata(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    image = pytest.importorskip("PIL.Image")
+    directory = tmp_path / "sample"
+    directory.mkdir()
+    image.new("RGB", (20, 20), "white").save(directory / "page.png")
+    monkeypatch.setattr(structure, "ARTIFACTS", tmp_path)
+    engine = MagicMock(adapter="qwen-patch")
+    engine.generate.return_value = ("{invalid", {"truncated": True, "output_tokens": 4096})
+    bundle = {"name": "sample", "words": [], "width": 20, "height": 20}
+    with pytest.raises(json.JSONDecodeError):
+        structure.run_adapter(bundle, engine, 4096)
+    assert json.loads((directory / "qwen-patch-generation.json").read_text()) == {
+        "truncated": True,
+        "output_tokens": 4096,
+    }
 
 
 @pytest.mark.parametrize(

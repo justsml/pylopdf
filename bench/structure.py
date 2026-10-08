@@ -421,6 +421,7 @@ def run_adapter(bundle: dict[str, Any], engine: Engines, limit: int) -> dict[str
     if name.endswith("crop"):
         return run_crops(bundle, engine, image, prompt, limit)
     raw, details = engine.generate(image, prompt, limit)
+    write_json(directory / f"{name}-generation.json", details)
     (directory / f"{name}-raw.txt").write_text(raw)
     if name.endswith("patch"):
         cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
@@ -487,6 +488,7 @@ def run_crops(bundle: dict[str, Any], engine: Engines, image: Any, prompt: str, 
         crop = crop.resize((round(crop.width * scale), round(crop.height * scale)))
         crop.save(directory / f"{engine.adapter}-crop-{index}.png")
         raw, details = engine.generate(crop, prompt, limit)
+        write_json(directory / f"{engine.adapter}-crop-{index}-generation.json", details)
         (directory / f"{engine.adapter}-crop-{index}-raw.txt").write_text(raw)
         text = re.sub(r"\A---\s*\n.*?\n---\s*\n", "", raw, flags=re.DOTALL)
         blocks.append(text)
@@ -597,6 +599,7 @@ def run_row_patches(bundle: dict[str, Any], engine: Engines, limit: int) -> dict
         prompt = PATCH_PROMPT + json.dumps(source, ensure_ascii=False, separators=(",", ":"))
         (directory / f"{engine.adapter}-crop-{index}-prompt.txt").write_text(prompt)
         raw, generation = engine.generate(crop, prompt, limit)
+        write_json(directory / f"{engine.adapter}-crop-{index}-generation.json", generation)
         (directory / f"{engine.adapter}-crop-{index}-raw.txt").write_text(raw)
         if generation["truncated"]:
             msg = "region patch exhausted its output token boundary"
@@ -696,8 +699,8 @@ def retain_attempt(bundle: dict[str, Any], adapter: str, repetition: int, starte
     directory = ARTIFACTS / bundle["name"]
     destination = directory / "repetitions" / adapter / str(repetition)
     destination.mkdir(parents=True, exist_ok=True)
-    for path in directory.glob(f"{adapter}-*.txt"):
-        if path.stat().st_mtime_ns >= started_ns:
+    for path in directory.glob(f"{adapter}-*"):
+        if path.suffix in {".txt", ".json", ".png"} and path.stat().st_mtime_ns >= started_ns:
             shutil.copyfile(path, destination / path.name)
 
 
@@ -905,6 +908,14 @@ def main() -> None:  # noqa: C901
                 result.update(
                     {"error": f"{type(error).__name__}: {error}", "elapsed_seconds": time.perf_counter() - start}
                 )
+                generation_files = [ARTIFACTS / bundle["name"] / f"{adapter}-generation.json"]
+                generation_files.extend((ARTIFACTS / bundle["name"]).glob(f"{adapter}-crop-*-generation.json"))
+                generations = [
+                    json.loads(path.read_text())
+                    for path in generation_files
+                    if path.exists() and path.stat().st_mtime_ns >= started_ns
+                ]
+                result["failed_generations"] = generations
                 (ARTIFACTS / bundle["name"] / f"{adapter}-error.txt").write_text(traceback.format_exc())
             result["process_peak_rss_kib"] = importlib.import_module("resource").getrusage(0).ru_maxrss
             report["results"] = [
